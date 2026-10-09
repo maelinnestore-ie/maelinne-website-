@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f5efe6">
+  <meta name="description" content="MaeLinne — everyday favourites made for comfort. A soft, easygoing wardrobe is on its way.">
+  <title>MaeLinne — Your everyday favourites</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="announcement"><span>COMING SOON</span><span class="announcement-dot">✦</span><a href="#join">Be first to know <span aria-hidden="true">↗</span></a></div>
+  <header class="site-header" id="top">
+    <a href="#top" class="wordmark" aria-label="MaeLinne home">MaeLinne<span class="wordmark-dot">.</span></a>
+    <nav class="desktop-nav" aria-label="Main navigation"><a href="#collection">The first drop</a><a href="#story">Our story</a><a href="#join">Stay in the loop</a><a href="#shop">Shop favourites</a></nav>
+    <div class="header-actions"><a class="action-link" href="#favourites" id="favourites-link" aria-label="Favourites"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0l-1 1-1-1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg><span class="action-text">Favourites</span><span id="fave-count" class="count" hidden>0</span></a><button class="action-link" id="cart-open" type="button" aria-label="Open shopping bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16l-1 13H5L4 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg><span id="cart-count" class="count" hidden>0</span></button><a class="action-link social" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram (placeholder link)" title="Instagram — replace with MaeLinne profile"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".9" fill="currentColor" stroke="none"/></svg></a><a class="action-link social" href="https://www.shopify.com/" target="_blank" rel="noopener noreferrer" aria-label="Shopify (placeholder link)" title="Shopify — replace with MaeLinne store link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14l-1 15H6L5 6Z"/><path d="M9 8V5a3 3 0 0 1 6 0v3"/><path d="M14 12c-2-1-4 0-4 1s4 1 4 3-2 3-5 2"/></svg></a><button type="button" class="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span></button></div>
+    <nav id="mobile-nav" class="mobile-nav" aria-label="Mobile navigation" hidden><a href="#collection">The first drop</a><a href="#story">Our story</a><a href="#join">Stay in the loop</a><a href="#shop">Shop favourites</a></nav>
+  </header>
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <img class="hero-image" src="assets/hero.webp" alt="Two friends in soft knitwear enjoying a sunlit café" fetchpriority="high">
+      <div class="hero-shade" aria-hidden="true"></div>
+      <div class="hero-content"><p class="eyebrow">YOUR NEW EVERYDAY FAVOURITES</p><h1 id="hero-title">Feels like <em>you.</em><br>Feels like home.</h1><p class="hero-lead">Comfort-first pieces, easy to wear and made to love.</p><a class="button button-dark" href="#collection">Meet the first drop <span aria-hidden="true">↗</span></a></div>
+    </section>
+    <div class="values-line"><span>Soft & comfortable</span><span aria-hidden="true">✳</span><span>Easy everyday style</span><span aria-hidden="true">✳</span><span>Thoughtful prices</span></div>
+    <section class="collection section-wrap" id="collection" aria-labelledby="collection-title">
+      <div class="section-head"><div><p class="eyebrow">A WARDROBE TO LIVE IN</p><h2 id="collection-title">The first <em>drop.</em></h2></div></div>
+      <div class="collection-grid">
+        <article class="product-card"><div class="product-image-wrap"><img src="assets/camisole.webp" alt="Illustrative cream ribbed camisole with lace trim, laid flat" loading="lazy"><span class="chip">Sneak peek</span></div><div class="product-meta"><h3>Lace-trim everyday cami</h3><p>Soft layers, pretty little details</p></div></article>
+        <article class="product-card"><div class="product-image-wrap"><img src="assets/knitwear-editorial.webp" alt="Editorial mood image showing comfortable layered knitwear, coffee and soft light" loading="lazy"><span class="chip">The mood</span></div><div class="product-meta"><h3>Cosy layers</h3><p>Pieces you'll reach for again</p></div></article>
+        <article class="product-card coming-card"><div class="coming-visual"><span class="flower-mark" aria-hidden="true">✳</span><span class="coming-script">good things<br>take time</span><span class="coming-small">MORE TO COME</span></div><div class="product-meta"><h3>More favourites soon</h3><p>The collection is taking shape</p></div></article>
+      </div>
+      <p class="preview-disclaimer">Concept imagery only. This is a preview of the MaeLinne website, not a live product catalogue. Actual stock, details and prices will be added before launch.</p>
+    </section>
+
+    <section class="shop-section section-wrap" id="shop" aria-labelledby="shop-title">
+      <div class="section-head"><div><p class="eyebrow">A LITTLE LOOK AT WHAT'S COMING</p><h2 id="shop-title">Your everyday <em>favourites.</em></h2></div></div>
+      <p class="shop-note">Illustrative products and example prices for this website preview. Stock, prices and product specifications are not confirmed.</p>
+      <div class="shop-grid">
+        <article class="shop-card" data-id="henley"><div class="shop-photo"><img src="assets/henley.webp" alt="Burgundy ribbed henley top, illustrative example" loading="lazy"><button class="heart" data-fave="henley" type="button" aria-label="Save burgundy henley top to favourites" aria-pressed="false">♡</button></div><div class="shop-info"><h3>Burgundy henley top</h3><span class="price">€22.00</span><div class="shop-actions"><button class="view-link" data-view="henley" type="button">View now ↗</button><button class="bag-button" data-add="henley" type="button">Add to bag +</button></div></div></article>
+        <article class="shop-card" data-id="jeans"><div class="shop-photo"><img src="assets/jeans.webp" alt="Relaxed fit light blue jeans, illustrative example" loading="lazy"><button class="heart" data-fave="jeans" type="button" aria-label="Save relaxed fit jeans to favourites" aria-pressed="false">♡</button></div><div class="shop-info"><h3>Relaxed fit jeans</h3><span class="price">€25.00</span><div class="shop-actions"><button class="view-link" data-view="jeans" type="button">View now ↗</button><button class="bag-button" data-add="jeans" type="button">Add to bag +</button></div></div></article>
+        <article class="shop-card" data-id="cardigan"><div class="shop-photo"><img src="assets/cardigan.webp" alt="Soft blue cable knit cardigan, illustrative example" loading="lazy"><button class="heart" data-fave="cardigan" type="button" aria-label="Save blue cardigan to favourites" aria-pressed="false">♡</button></div><div class="shop-info"><h3>Comfy cardi</h3><span class="price">€27.00</span><div class="shop-actions"><button class="view-link" data-view="cardigan" type="button">View now ↗</button><button class="bag-button" data-add="cardigan" type="button">Add to bag +</button></div></div></article>
+      </div>
+    </section>
+    <section class="favourites-section section-wrap" id="favourites" aria-labelledby="favourites-title"><div class="section-head"><div><p class="eyebrow">SAVE WHAT YOU LOVE</p><h2 id="favourites-title">Your <em>favourites.</em></h2></div></div><div id="fave-list" class="saved-list" aria-live="polite">Tap a heart above to save a favourite.</div></section>
+    <section class="story-band" id="story" aria-labelledby="story-title"><div class="story-inner"><div class="story-symbol" aria-hidden="true">m<span>✳</span></div><div><p class="eyebrow">HELLO, WE'RE MAELINNE</p><h2 id="story-title">Good clothes.<br><em>Easy days.</em></h2></div><div class="story-copy"><p>Getting dressed should feel good. We’re building a little corner of the internet for soft fabrics, easy shapes and the everyday pieces you want to wear again and again.</p><p>No fuss. Just lovely things, at sensible prices.</p></div></div></section>
+    <section class="join section-wrap" id="join" aria-labelledby="join-title"><p class="eyebrow">THE BEST BITS ARE STILL TO COME</p><h2 id="join-title">Something lovely<br>is <em>on its way.</em></h2><p>MaeLinne is getting ready for its first drop. Follow along for launch news and first looks.</p><span class="coming-pill">COMING SOON <span aria-hidden="true">✦</span></span></section>
+  </main>
+  <footer class="footer"><div class="footer-top"><a class="wordmark" href="#top">MaeLinne<span class="wordmark-dot">.</span></a><p>your go-to wardrobe with a little more TLC</p></div><div class="footer-bottom"><span>© <span id="year"></span> MaeLinne</span><span>Made with care in Ireland</span><a href="#top">Back to top ↑</a></div></footer>
+  <dialog id="product-dialog" class="store-dialog" aria-labelledby="product-dialog-title"><button class="close-dialog" type="button" data-close aria-label="Close">×</button><div id="product-dialog-body"></div></dialog>
+  <dialog id="cart-dialog" class="store-dialog" aria-labelledby="cart-title"><button class="close-dialog" type="button" data-close aria-label="Close">×</button><h2 id="cart-title">Your bag</h2><div id="cart-items"></div><div id="cart-total"></div><p class="demo-notice">Preview only — no checkout or payment collection is connected. Products and prices are examples.</p><button class="button button-dark checkout" type="button" disabled>Checkout coming soon</button></dialog>
+  <script src="script.js"></script>
+</body>
+</html>
