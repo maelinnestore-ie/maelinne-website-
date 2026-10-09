@@ -9,4 +9,29 @@
 .header-actions{min-width:0;align-items:center;gap:16px}.action-link{display:inline-flex;align-items:center;gap:7px;color:var(--burgundy);border:0;background:none;padding:8px 0;cursor:pointer;white-space:nowrap;font-size:12px}.action-link svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.action-link:hover,.view-link:hover{color:#a16759}.count{background:var(--burgundy);color:white;min-width:17px;min-height:17px;border-radius:50%;display:grid;place-items:center;font-size:10px}.count[hidden]{display:none}.hero-side-note{display:none}.section-head>p{display:none}.shop-section{padding-top:35px;padding-bottom:88px}.shop-note{font-size:12px;color:var(--muted);line-height:1.6;margin:-8px 0 24px}.shop-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}.shop-photo{position:relative;aspect-ratio:1/1.05;overflow:hidden;background:#eee0d3}.shop-photo img{width:100%;height:100%;object-fit:cover;display:block}.heart{position:absolute;right:14px;top:14px;font-size:29px;line-height:1;border:none;background:#fbf8f3ee;color:var(--burgundy);width:41px;height:41px;cursor:pointer;border-radius:50%}.heart[aria-pressed=true]{background:var(--burgundy);color:white}.shop-info{padding:17px 1px}.shop-info h3{font:normal 23px 'DM Serif Display',Georgia,serif;margin:0 0 7px}.price{display:block;font-size:15px;margin-bottom:13px}.shop-actions{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.view-link,.bag-button{background:none;border:0;padding:8px 0;cursor:pointer;font-size:13px;color:var(--burgundy);text-decoration:underline;text-underline-offset:5px}.bag-button{font-weight:600;text-decoration:none}.favourites-section{padding-top:40px;padding-bottom:75px;border-top:1px solid var(--line)}.favourites-section .section-head{margin-bottom:15px}.saved-list{font-size:14px;color:var(--muted);min-height:30px}.saved-list a{display:inline-block;margin:7px 15px 7px 0;text-decoration:underline;text-underline-offset:4px;color:var(--burgundy)}.store-dialog{border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:32px;width:min(92vw,590px);max-height:85vh;box-shadow:0 22px 80px #26151555}.store-dialog::backdrop{background:#26151599}.store-dialog h2{font-size:39px;color:var(--burgundy);margin:10px 0 18px}.close-dialog{position:absolute;top:10px;right:14px;background:none;border:0;font-size:31px;cursor:pointer;color:var(--burgundy)}.detail-layout{display:grid;grid-template-columns:42% 1fr;gap:24px;align-items:start}.detail-layout img{width:100%;height:230px;object-fit:cover}.detail-layout p{line-height:1.6}.demo-notice{font-size:12px;color:var(--muted);line-height:1.7;background:var(--cream);padding:12px}.cart-row{display:flex;gap:14px;justify-content:space-between;border-bottom:1px solid var(--line);padding:13px 0;align-items:center}.cart-row button{background:none;border:0;text-decoration:underline;color:var(--burgundy);cursor:pointer}.cart-total{font-size:20px;text-align:right;margin-top:19px}.checkout{margin-top:10px}.checkout:disabled{opacity:.5;cursor:not-allowed}.social{min-width:24px}.footer-top p{white-space:normal;text-align:right}
 @media(max-width:1050px){.action-text{display:none}.header-actions{gap:11px}.desktop-nav{gap:15px}}
 @media(max-width:700px){.header-actions{margin-left:auto;margin-right:8px;gap:8px}.action-link{padding:5px}.action-link svg{width:20px;height:20px}.social{display:none}.shop-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.shop-card:nth-child(3){grid-column:1/-1;max-width:calc(50% - 8px)}.shop-info h3{font-size:18px}.view-link,.bag-button{font-size:12px}.shop-actions{display:block}.shop-actions button{display:block}.detail-layout{grid-template-columns:1fr}.detail-layout img{height:190px}.footer-top p{text-align:left}}
-@media(max-width:390px){.wordmark{font-size:37px}.shop-card:nth-child(3){max-width:100%}}
+@media(max-width:390px){.wordmark{font-size:37px}.shop-card:nth-child(3){max-width:100%}} 
+/* MaeLinne - About Us layout improvements */
+
+@media (min-width: 900px) {
+  .story-inner {
+    align-items: start;
+    grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 48px;
+    padding-top: 85px;
+    padding-bottom: 85px;
+  }
+
+  .story-inner > div:nth-child(2) {
+    padding-top: 0;
+  }}
+
+  .story-copy {
+    padding-top: 0;
+  }
+
+  .story-copy p {
+    margin-bottom: 20px;
+    line-height: 1.7;
+  }
+}
+
