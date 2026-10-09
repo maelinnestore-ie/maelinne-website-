@@ -35,3 +35,47 @@
   }
 
 
+/* MaeLinne Contact Section */
+
+.contact-section {
+  background: #f5efe6;
+  text-align: center;
+  padding: 100px 24px;
+}
+
+.contact-section h2 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(48px, 5vw, 76px);
+  font-weight: 400;
+  color: #491c24;
+  margin: 15px 0 25px;
+}
+
+.contact-section > p:not(.eyebrow) {
+  max-width: 480px;
+  margin: 0 auto 35px;
+  font-size: 17px;
+  line-height: 1.8;
+  color: #665654;
+}
+
+.contact-button {
+  display: inline-block;
+  padding: 18px 36px;
+  background: #491c24;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: background 0.2s ease;
+}
+
+.contact-button:hover {
+  background: #713740;
+}
+
+.contact-button:focus-visible {
+  outline: 3px solid #a87871;
+  outline-offset: 4px;
+}
+
