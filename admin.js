@@ -8,7 +8,7 @@ function notify(message){status.textContent=message;}
 let allProducts=[];const search=document.getElementById('product-search'),categoryFilter=document.getElementById('category-filter'),statusFilter=document.getElementById('status-filter');for(const input of [search,categoryFilter,statusFilter])input.addEventListener('input',()=>renderProducts());
 async function load(){
  try{
- const [p,o]=await Promise.all([api('products'),api('orders')]);allProducts=p.products;renderProducts();ordersEl.replaceChildren();
+ const [p,o]=await Promise.all([api('products'),api('orders')]);allProducts=p.products;renderProducts();ordersEl.replaceChildren();if(!o.orders.length)ordersEl.append(node('p','No orders yet.'));for(const order of o.orders){const el=node('div');el.className='order';el.append(node('strong',order.id+' — '+order.status),node('p',order.customer_email+' · '+euros(order.total_cents)+' · '+order.created_at));ordersEl.append(el);}notify('Dashboard connected.');
  }
  catch(e){notify('Dashboard unavailable: '+e.message+'. Check Cloudflare Access and D1 setup.');}
 }
@@ -49,9 +49,6 @@ function renderProducts(){
   details.append(form);(product.active?publishedEl:draftsEl).append(box);
  }
 }
- if(!o.orders.length)ordersEl.append(node('p','No orders yet.'));
- for(const order of o.orders){const el=node('div');el.className='order';el.append(node('strong',order.id+' — '+order.status),node('p',order.customer_email+' · '+euros(order.total_cents)+' · '+order.created_at));ordersEl.append(el);}
- notify('Dashboard connected. Products and stock saved to D1.');
 async function uploadPhoto(file){const fd=new FormData();fd.append('photo',file);const r=await fetch('/api/admin/images',{method:'POST',credentials:'same-origin',body:fd});const v=await r.json().catch(()=>({}));if(!r.ok)throw Error(v.error||'Photo upload failed');return v.url;}
 async function run(fn,success){try{await fn();notify(success);}catch(e){notify('Could not save: '+e.message);}}
 document.getElementById('product-form').onsubmit=e=>{e.preventDefault();const form=e.currentTarget,v=new FormData(form);run(async()=>{if(photoInput.files.length>12)throw Error('Maximum 12 photos.');const images=[];for(const photo of photoInput.files){notify('Uploading photo '+(images.length+1)+' of '+photoInput.files.length+'…');images.push(await uploadPhoto(photo));}const saved=await api('products',{method:'POST',body:JSON.stringify({name:v.get('name'),description:v.get('description'),image_url:images[0]||'',price_cents:Math.round(Number(v.get('price'))*100),active:false})});await api('products/'+saved.id+'/gallery',{method:'PUT',body:JSON.stringify({images,color:String(v.get('color')||''),style_group:String(v.get('style_group')||''),category:String(v.get('category')||'Other')})});form.reset();photoPreview.replaceChildren();await load();},'Draft saved.');};
