@@ -23,7 +23,7 @@ function markDirty(element) { const form = element.closest("form"); if (form) { 
 const uploaded = new WeakMap();
 function notify(message) { status.textContent = message; }
 async function api(path, options = {}) {
-  const response = await fetch('/api/admin/' + path, {credentials:'same-origin', ...options, headers:{'content-type':'application/json', ...options.headers}});
+  const response = await fetch('/api/admin/' + path, {credentials:'same-origin', cache:'no-store', ...options, headers:{'content-type':'application/json', ...options.headers}});
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw Error(response.status === 403 ? 'Dashboard access could not be verified. Sign in again in another tab, then retry. Your entries are still here.' : data.error || 'Request failed. Please try again.');
   return data;
@@ -59,6 +59,14 @@ async function uploadPhoto(file) {
   if (!response.ok) throw Error(response.status === 403 ? 'Dashboard access could not be verified. Sign in again, then retry; your entries are still here.' : result.error || 'Photo upload failed.');
   uploaded.set(file,result.url); return result.url;
 }
+function stockQuantity(value) {
+  const text = String(value).trim();
+  if (!/^\d+$/.test(text) || !Number.isSafeInteger(Number(text)) || Number(text) > 100000) throw Error('Enter a whole-number stock quantity from 0 to 100000 for each size.');
+  return Number(text);
+}
+function confirmStock(expected, saved) {
+  if (!Array.isArray(saved) || expected.some(row => !saved.some(item => (row.id ? item.id === row.id : item.label === row.label) && item.quantity === row.quantity))) throw Error('The saved stock could not be confirmed. Your entries are still here; please retry.');
+}
 function sizeEditor(parent, initial = []) {
   const section = node('div'); section.className = 'size-editor'; parent.append(section);
   section.append(node('h4','Sizes & stock'), node('p','Add the sizes you have, then enter the quantity for each. Leave SKU blank to generate it automatically.'));
@@ -71,7 +79,7 @@ function sizeEditor(parent, initial = []) {
   const rows = [];
   function addRow(value = {}) {
     const row = node('tr'); const size = node('input'); size.value = value.label || ''; size.maxLength = 80; size.required = true; size.setAttribute('aria-label','Size'); size.placeholder = 'e.g. S or 10';
-    const qty = node('input'); qty.type = 'number'; qty.min = 0; qty.max = 100000; qty.step = 1; qty.required = true; qty.value = value.quantity ?? 0; qty.setAttribute('aria-label','In stock');
+    const qty = node('input'); qty.type = 'text'; qty.inputMode = 'numeric'; qty.pattern = '[0-9]+'; qty.maxLength = 6; qty.autocomplete = 'off'; qty.title = 'Whole-number stock from 0 to 100000'; qty.required = true; qty.value = value.quantity ?? 0; qty.setAttribute('aria-label','In stock');
     const sku = node('input'); sku.value = value.sku || ''; sku.maxLength = 80; sku.placeholder = 'Automatic'; sku.setAttribute('aria-label','SKU (optional)');
     const entry = {id:value.id, row, size, qty, sku}; rows.push(entry);
     for (const [input, className] of [[size,''],[qty,''],[sku,'sku-column']]) { const td = node('td'); td.className = className; td.append(input); row.append(td); }
@@ -87,7 +95,7 @@ function sizeEditor(parent, initial = []) {
   field(section,'Show SKUs (optional)',skuToggle).parentElement.className = 'inline-check';
   skuToggle.onchange = () => table.classList.toggle('show-skus',skuToggle.checked);
   initial.forEach(addRow);
-  return () => rows.map(r => ({...(r.id ? {id:r.id} : {}),label:r.size.value.trim(),sku:r.sku.value.trim(),quantity:r.qty.value === '' ? null : Number(r.qty.value)}));
+  return () => rows.map(r => ({...(r.id ? {id:r.id} : {}),label:r.size.value.trim(),sku:r.sku.value.trim(),quantity:stockQuantity(r.qty.value)}));
 }
 function colourEditor(parent, initial = {}, removable = false) {
   const group = node('fieldset'); group.className = 'colour-editor'; group.append(node('legend','Colour, photos & sizes')); parent.append(group);
@@ -138,7 +146,7 @@ function colourEditor(parent, initial = {}, removable = false) {
   group.append(node('p','JPG, PNG or WebP; up to 5 MB each. Use photos of this colour.'));
   const getSizes = sizeEditor(group,initial.variants || []);
   if (removable) group.append(button('Remove this colour', () => { markDirty(group); group.remove(); }));
-  return {group, async read() {
+  return {group, getSizes, async read() {
     if (photos.length + pending.length > 12) throw Error('Use no more than 12 photos per colour.');
     const images = [...photos];
     for (const file of pending) images.push(await uploadPhoto(file));
@@ -224,10 +232,33 @@ function renderProducts() {
     },false));
 
     const editor = colourEditor(form,product);
+    const stockTools = node('div'); stockTools.className = 'stock-tools'; form.append(stockTools);
+    const stockMessage = feedback(stockTools);
+    stockTools.prepend(button('Save stock',async () => {
+      if (busy) return;
+      let rows;
+      try {
+        rows = editor.getSizes();
+        if (rows.some(row => !row.id) || rows.length !== product.variants.length) throw Error('Use Save product, sizes & stock to save new sizes first.');
+      } catch (error) { stockMessage.textContent = error.message; stockMessage.classList.add('error'); return; }
+      const quantities = [...editor.group.querySelectorAll('[aria-label="In stock"]')];
+      quantities.forEach(input => input.disabled = true);
+      await save(stockTools,stockMessage,async () => {
+        const result = await api('products/'+product.id+'/stock',{method:'PUT',body:JSON.stringify({variants:rows.map(({id,quantity}) => ({id,quantity}))})});
+        confirmStock(rows,result.variants);
+        for (const input of editor.group.querySelectorAll('[aria-label="In stock"]')) delete input.dataset.dirty;
+        form.dataset.dirty = String(!!form.querySelector('[data-dirty="true"]'));
+        stock.textContent = rows.map(row => row.label+': '+row.quantity).join(' · ');
+        summary.querySelector('span').textContent = (product.active?'Published':'Draft')+' · '+rows.reduce((sum,row) => sum+row.quantity,0)+' in stock';
+      },'Stock saved: '+rows.map(row => row.label+': '+row.quantity).join(' · '));
+      quantities.forEach(input => input.disabled = false);
+    },false));
+    stockTools.append(node('p','Save quantities on their own. Use the button below when changing size names, photos or other product details.'));
     const submit = node('button','Save product, sizes & stock'); submit.type = 'submit'; form.append(submit); const message = feedback(form);
     form.onsubmit = event => { event.preventDefault(); save(form,message,async () => {
       const colour = await editor.read();
-      await api('products/'+product.id+'/listing',{method:'PUT',body:JSON.stringify({...colour,name:name.value,description:description.value,price_cents:priceInCents(price.value),category:category.value,fabric:material.value,style_group:style.value})});
+      const result = await api('products/'+product.id+'/listing',{method:'PUT',body:JSON.stringify({...colour,name:name.value,description:description.value,price_cents:priceInCents(price.value),category:category.value,fabric:material.value,style_group:style.value})});
+      confirmStock(colour.variants,result.variants);
     },'Product, sizes and stock saved.'); };
     details.append(form);
     const stock = node('p',product.variants.length ? product.variants.map(v => v.label+': '+v.quantity).join(' · ') : 'No sizes yet — open the editor to add them.'); details.append(stock);

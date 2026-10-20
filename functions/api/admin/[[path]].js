@@ -64,6 +64,27 @@ async function handler({request,env}){
    await env.IMAGES.put('galleries/'+id+'.json',JSON.stringify({images,color,style_group,category,fabric}),{httpMetadata:{contentType:'application/json'}});
    await env.DB.prepare('UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(images[0]||'',id).run();return json({ok:true});
   }
+  // Save only quantities, atomically, and read back from the same transaction.
+  if(request.method==='PUT'&&/^products\/[a-f0-9-]{36}\/stock$/.test(section)){
+   const id=section.split('/')[1];
+   if(!await env.DB.prepare('SELECT id FROM products WHERE id=?').bind(id).first())return fail('Product not found.',404);
+   let body;try{body=await request.json();}catch{return fail('Invalid JSON.');}
+   const rows=body?.variants;
+   if(!Array.isArray(rows)||!rows.length||rows.length>20)return fail('Choose between one and twenty saved sizes.');
+   const existing=(await env.DB.prepare('SELECT * FROM variants WHERE product_id=?').bind(id).all()).results;
+   const known=new Set(existing.map(row=>row.id)),seen=new Set();
+   for(const row of rows){
+    if(!row||!known.has(row.id)||seen.has(row.id))return fail('A size row is no longer valid. Reload the product and try again.',409);
+    if(!Number.isSafeInteger(row.quantity)||row.quantity<0||row.quantity>100000)return fail('Enter whole-number stock from 0 to 100000.');
+    seen.add(row.id);
+   }
+   if(rows.length!==existing.length)return fail('Use the full product save when adding sizes.',409);
+   const statements=rows.map(row=>env.DB.prepare('UPDATE variants SET quantity=? WHERE id=? AND product_id=?').bind(row.quantity,row.id,id));
+   statements.push(env.DB.prepare('SELECT * FROM variants WHERE product_id=?').bind(id));
+   const results=await env.DB.batch(statements),variants=results[results.length-1].results;
+   if(rows.some(row=>!variants.some(saved=>saved.id===row.id&&saved.quantity===row.quantity)))return fail('The saved stock could not be confirmed. Please retry.',500);
+   return json({ok:true,variants});
+  }
   // Save a whole colour/size grid with the product, preserving existing variant IDs.
   if((request.method==='POST'&&section==='listings')||(request.method==='PUT'&&/^products\/[a-f0-9-]{36}\/listing$/.test(section))){
    if(!env.IMAGES)return fail('Image storage unavailable.',503);
@@ -119,15 +140,17 @@ async function handler({request,env}){
      statements.push(row.existing?env.DB.prepare('UPDATE variants SET label=?,sku=?,quantity=? WHERE id=? AND product_id=?').bind(row.label,row.sku,row.quantity,row.id,item.id):env.DB.prepare('INSERT INTO variants (id,product_id,label,sku,quantity) VALUES (?,?,?,?,?)').bind(row.id,item.id,row.label,row.sku,row.quantity));
     }
    }
+   let savedVariants=[];
+   statements.push(env.DB.prepare('SELECT * FROM variants WHERE product_id IN ('+planned.map(()=>'?').join(',')+')').bind(...planned.map(item=>item.id)));
    try{
     for(const item of planned)await env.IMAGES.put('galleries/'+item.id+'.json',JSON.stringify(item.gallery),{httpMetadata:{contentType:'application/json'}});
-    await env.DB.batch(statements);
+    const results=await env.DB.batch(statements);savedVariants=results[results.length-1].results;
    }catch(error){
     await Promise.allSettled(backups.map(b=>b.value===null?env.IMAGES.delete(b.key):env.IMAGES.put(b.key,b.value,{httpMetadata:{contentType:'application/json'}})));
     if(String(error).includes('UNIQUE'))return fail('A SKU was saved elsewhere at the same time. Use another SKU or leave new SKUs blank.',409);
     throw error;
    }
-   return json({ok:true,ids:planned.map(item=>item.id)},editing?200:201);
+   return json({ok:true,ids:planned.map(item=>item.id),variants:savedVariants},editing?200:201);
   }
   if(request.method==='POST'&&section==='products'){
    let v;try{v=await request.json();}catch{return fail('Invalid JSON');}
