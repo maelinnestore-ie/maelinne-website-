@@ -9,9 +9,17 @@ const categoryFilter = document.getElementById('category-filter');
 const statusFilter = document.getElementById('status-filter');
 const categories = ['Tops','Knitwear','Bottoms','Dresses & Skirts','Sets','Outerwear','Sleepwear','Accessories','Other'];
 const euros = cents => new Intl.NumberFormat('en-IE',{style:'currency',currency:'EUR'}).format(cents/100);
+function priceInCents(value) {
+  const match = /^(\d+)(?:[.,](\d{1,2}))?$/.exec(String(value).trim());
+  if (!match) throw Error('Enter the price as 16.99 or 16,99, with no more than two decimal places.');
+  const cents = Number(match[1]) * 100 + Number((match[2] || '').padEnd(2,'0'));
+  if (!Number.isSafeInteger(cents) || cents < 0 || cents > 10000000) throw Error('Enter a price between €0.00 and €100,000.00.');
+  return cents;
+}
+
 let allProducts = [], busy = false;
 const hasUnsavedChanges = () => !!document.querySelector('form[data-dirty="true"]');
-function markDirty(element) { const form = element.closest("form"); if (form) form.dataset.dirty = "true"; }
+function markDirty(element) { const form = element.closest("form"); if (form) { form.dataset.dirty = "true"; element.dataset.dirty = "true"; } }
 const uploaded = new WeakMap();
 function notify(message) { status.textContent = message; }
 async function api(path, options = {}) {
@@ -148,7 +156,7 @@ createForm.onsubmit = event => {
     const colours = [];
     for (const editor of colourEditors.filter(c => c.group.isConnected)) colours.push(await editor.read());
     if (!colours.length) throw Error('Add at least one colour.');
-    await api('listings',{method:'POST',body:JSON.stringify({name:value.get('name'),description:value.get('description'),price_cents:Math.round(Number(value.get('price'))*100),category:value.get('category'),fabric:value.get('fabric'),style_group:value.get('style_group'),colours})});
+    await api('listings',{method:'POST',body:JSON.stringify({name:value.get('name'),description:value.get('description'),price_cents:priceInCents(value.get('price')),category:value.get('category'),fabric:value.get('fabric'),style_group:value.get('style_group'),colours})});
     createForm.reset(); colourContainer.replaceChildren(); colourEditors = []; addColour();
   },'Drafts saved with all colours, sizes and stock.');
 };
@@ -175,12 +183,31 @@ function renderProducts() {
     const material = field(form,'Material'); material.maxLength = 160; material.value = product.fabric || '';
     const description = field(form,'Description',node('textarea')); description.maxLength = 2000; description.value = product.description || '';
     const style = field(form,'Style group (links other colours)'); style.maxLength = 80; style.value = product.style_group || '';
-    const price = field(form,'Price (€)'); price.type = 'number'; price.min = 0; price.step = '.01'; price.required = true; price.value = (product.price_cents/100).toFixed(2);
+    const price = field(form,'Price (€)'); price.type = 'text'; price.inputMode = 'decimal'; price.autocomplete = 'off'; price.pattern = '[0-9]+([.,][0-9]{1,2})?'; price.title = 'Use 16.99 or 16,99'; price.maxLength = 12; price.required = true; price.value = (product.price_cents/100).toFixed(2);
+    const priceTools = node('div'); priceTools.className = 'price-tools'; form.append(priceTools);
+    const priceMessage = feedback(priceTools);
+    priceTools.prepend(button('Save price',async () => {
+      if (busy) return;
+      let cents;
+      try { cents = priceInCents(price.value); }
+      catch (error) { priceMessage.textContent = error.message; priceMessage.classList.add('error'); priceMessage.focus(); return; }
+      price.disabled = true;
+      await save(priceTools,priceMessage,async () => {
+        await api('products/'+product.id,{method:'PATCH',body:JSON.stringify({price_cents:cents})});
+        const latest = (await api('products')).products.find(item => item.id === product.id);
+        if (!latest || latest.price_cents !== cents) throw Error('The saved price could not be confirmed. Please retry.');
+        price.value = (cents/100).toFixed(2); price.dataset.dirty = 'false';
+        form.dataset.dirty = String(!!form.querySelector('[data-dirty="true"]'));
+        summary.querySelector('h3').textContent = latest.name + (latest.color ? ' — '+latest.color : '') + ' · ' + euros(cents);
+      },'Price saved: '+euros(cents));
+      price.disabled = false;
+    },false));
+
     const editor = colourEditor(form,product);
     const submit = node('button','Save product, sizes & stock'); submit.type = 'submit'; form.append(submit); const message = feedback(form);
     form.onsubmit = event => { event.preventDefault(); save(form,message,async () => {
       const colour = await editor.read();
-      await api('products/'+product.id+'/listing',{method:'PUT',body:JSON.stringify({...colour,name:name.value,description:description.value,price_cents:Math.round(Number(price.value)*100),category:category.value,fabric:material.value,style_group:style.value})});
+      await api('products/'+product.id+'/listing',{method:'PUT',body:JSON.stringify({...colour,name:name.value,description:description.value,price_cents:priceInCents(price.value),category:category.value,fabric:material.value,style_group:style.value})});
     },'Product, sizes and stock saved.'); };
     details.append(form);
     const stock = node('p',product.variants.length ? product.variants.map(v => v.label+': '+v.quantity).join(' · ') : 'No sizes yet — open the editor to add them.'); details.append(stock);
