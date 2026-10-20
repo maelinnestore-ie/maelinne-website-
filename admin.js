@@ -26,7 +26,7 @@ async function load(){
   const saveBtn=node('button','Save changes');saveBtn.type='submit';editForm.append(saveBtn);
   edit.onclick=()=>{editForm.hidden=!editForm.hidden;edit.textContent=editForm.hidden?'Edit product':'Close editor';};
   editForm.onsubmit=e=>{e.preventDefault();run(async()=>{if(photos.length+newImage.files.length>12)throw Error('Maximum 12 photos.');for(const file of newImage.files)photos.push(await uploadPhoto(file));await api('products/'+product.id+'/gallery',{method:'PUT',body:JSON.stringify({images:photos,color:colorInput.value})});await api('products/'+product.id,{method:'PATCH',body:JSON.stringify({name:nameInput.value,description:descriptionInput.value,price_cents:Math.round(Number(priceInput.value)*100),image_url:photos[0]||''})});await load();},'Changes saved.');};
-  box.append(editForm);const galleryLink=node('a','Preview photos & zoom ↗');galleryLink.href='/product.html?id='+encodeURIComponent(product.id);galleryLink.target='_blank';galleryLink.rel='noopener';box.append(galleryLink);
+  box.append(editForm);const galleryLink=node('a','Preview photos & zoom ↗');galleryLink.href='/product.html?id='+encodeURIComponent(product.id);galleryLink.target='_blank';galleryLink.rel='noopener';if(product.active)box.append(galleryLink);
   const list=node('div');for(const v of product.variants){
    const row=node('div');row.className='variant';row.append(node('span',v.label+' · SKU '+v.sku));
    const form=node('form');const label=node('label','In stock');const qty=node('input');qty.type='number';qty.min=0;qty.step=1;qty.value=v.quantity;label.append(qty);const button=node('button','Update');form.append(label,button);
