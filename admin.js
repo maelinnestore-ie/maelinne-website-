@@ -1,4 +1,6 @@
 const status=document.getElementById('status'),productsEl=document.getElementById('products'),ordersEl=document.getElementById('orders');
+const photoInput=document.getElementById('photo-file'),imageUrlInput=document.getElementById('image-url'),photoPreview=document.getElementById('photo-preview');
+photoInput.addEventListener('change',()=>{imageUrlInput.value='';photoPreview.replaceChildren();const file=photoInput.files[0];if(file){const preview=node('img');preview.alt='Selected product photo';preview.style.cssText='max-width:200px;max-height:230px;object-fit:contain;border-radius:8px;';preview.src=URL.createObjectURL(file);preview.onload=()=>URL.revokeObjectURL(preview.src);photoPreview.append(preview);}});
 const euros=c=>new Intl.NumberFormat('en-IE',{style:'currency',currency:'EUR'}).format(c/100);
 const node=(tag,text)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;};
 async function api(path,options){const r=await fetch('/api/admin/'+path,{credentials:'same-origin',...options,headers:{'content-type':'application/json',...(options?.headers||{})}});const v=await r.json().catch(()=>({}));if(!r.ok)throw Error(v.error||'Request failed');return v;}
@@ -31,5 +33,5 @@ async function load(){
  }catch(e){notify('Dashboard unavailable: '+e.message+'. Check Cloudflare Access and D1 setup.');}
 }
 async function run(fn,success){try{await fn();notify(success);}catch(e){notify('Could not save: '+e.message);}}
-document.getElementById('product-form').onsubmit=e=>{e.preventDefault();const form=e.currentTarget,v=new FormData(form);run(async()=>{await api('products',{method:'POST',body:JSON.stringify({name:v.get('name'),description:v.get('description'),image_url:v.get('image_url'),price_cents:Math.round(Number(v.get('price'))*100),active:false})});form.reset();await load();},'Draft saved.');};
+document.getElementById('product-form').onsubmit=e=>{e.preventDefault();const form=e.currentTarget,v=new FormData(form);run(async()=>{let imageUrl='';const photo=photoInput.files[0];if(photo){notify('Uploading photo…');const body=new FormData();body.append('photo',photo);const uploaded=await fetch('/api/admin/images',{method:'POST',credentials:'same-origin',body});const result=await uploaded.json().catch(()=>({}));if(!uploaded.ok)throw Error(result.error||'Photo upload failed');imageUrl=result.url;imageUrlInput.value=imageUrl;}await api('products',{method:'POST',body:JSON.stringify({name:v.get('name'),description:v.get('description'),image_url:imageUrl,price_cents:Math.round(Number(v.get('price'))*100),active:false})});form.reset();photoPreview.replaceChildren();await load();},'Draft saved.');};
 load();
