@@ -1,0 +1,459 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>MaeLinne — Shop dashboard</title><style>:root{font-family:system-ui,-apple-system,sans-serif;color:#3a272d;background:#f6efe7}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1050px;margin:auto;padding:40px 22px 90px}header{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}h1,h2{font-family:Georgia,serif;color:#481b20}h1{font-size:clamp(2.5rem,6vw,4rem);margin:0 0 10px}h2{font-size:2rem}.eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.2em;color:#8b5a60}.notice,section{background:#fffaf5;padding:22px;border:1px solid #e2d3c7;margin-top:24px;border-radius:7px}.notice{background:#eee3d8}section{padding:28px}.hint{color:#736569}.product{padding:20px 0;border-top:1px solid #e2d3c7}.product p{margin:7px 0}.variant{padding:8px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center}form{display:grid;gap:14px;max-width:650px}label{display:grid;gap:7px;font-size:.92rem;font-weight:600}input,textarea{font:inherit;padding:12px;border:1px solid #bca9a5;border-radius:4px;width:100%;background:white}input[type=number]{max-width:170px}button{font:inherit;background:#481b20;color:#fff;border:0;padding:12px 18px;border-radius:4px;cursor:pointer}button:disabled{opacity:.5}button.secondary{background:#eee3d8;color:#481b20}button:focus-visible,a:focus-visible{outline:3px solid #a46658;outline-offset:3px}.variant input{width:110px}.variant form{display:flex;align-items:end;flex-wrap:wrap;gap:8px} .variant form label{max-width:130px} .order{border-top:1px solid #ddd;padding:12px 0;word-break:break-word}
+
+.gallery-editor{display:flex;flex-wrap:wrap;gap:12px}.photo-tile{width:150px;display:grid;gap:5px}.photo-tile img{width:100%;height:165px;object-fit:contain;background:#f4ece5}.photo-tile button{padding:7px;font-size:.8rem}#photo-preview{display:flex;flex-wrap:wrap}form[hidden]{display:none}
+
+.catalogue-tools{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin:20px 0 28px}select{font:inherit;padding:12px;border:1px solid #bca9a5;border-radius:4px;background:white;width:100%}.product details{border-bottom:1px solid #e2d3c7;padding:5px 0 15px}.product summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.product summary h3{margin:0;font-size:1.12rem}.product details[open]>summary{margin-bottom:20px}.product{padding:10px 0;border-top:0}@media(max-width:650px){.catalogue-tools{grid-template-columns:1fr}}
+/* One save for colour details, size rows and stock. */
+form{max-width:850px}fieldset{min-width:0}.colour-editor{border:1px solid #d8c6b8;padding:20px;margin:12px 0 20px;border-radius:6px;display:grid;gap:14px;background:#fbf4ec}.colour-editor legend{font-weight:700;padding:0 8px}.colour-editor p,.size-editor p{font-size:.85rem;line-height:1.5;color:#736569;margin:0}.size-editor h4{margin:8px 0;font-size:1rem}.size-shortcuts{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}.size-shortcuts button{padding:8px 12px;font-size:.85rem}.size-table{border-collapse:collapse;width:100%;margin:12px 0}.size-table th{text-align:left;font-size:.8rem}.size-table td,.size-table th{padding:8px 5px;border-bottom:1px solid #e2d3c7;vertical-align:middle}.size-table input{min-width:60px;max-width:130px;padding:10px}.size-table td span{font-size:.75rem;color:#736569}.size-table td button{font-size:.75rem;padding:8px}.size-table .sku-column{display:none}.size-table.show-skus .sku-column{display:table-cell}.inline-check{display:flex;align-items:center;justify-content:flex-start;font-size:.8rem}.inline-check input{width:auto;order:-1}.form-message{margin:0;font-weight:600;font-size:.9rem;line-height:1.5}.form-message:empty{display:none}.form-message.error{color:#9a2439;background:#fff0f1;border:1px solid #e4a7b3;padding:12px;border-radius:4px}.selected-photos{display:flex;gap:10px;flex-wrap:wrap}.selected-photos img{width:100px;height:130px;object-fit:contain}.photo-tile{align-content:start}.photo-tile span{font-size:.75rem;text-align:center}.product-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.product-editor{padding:20px 0}.notice{overflow-wrap:anywhere}button:disabled{cursor:wait}.size-table-wrap{overflow-x:auto}[hidden]{display:none!important}@media(max-width:650px){section{padding:18px}.colour-editor{padding:12px}.wrap{padding:24px 14px 60px}.size-table td,.size-table th{padding:8px 3px}.size-table input{max-width:88px}.size-table.show-skus{min-width:460px}}
+.selected-photos .photo-tile img{width:100%;height:165px}.selected-photos .photo-tile span{overflow-wrap:anywhere}
+</style></head><body><main class="wrap"><header><div><p class="eyebrow">MAELINNE / PRIVATE WORKSPACE</p><h1>Shop dashboard</h1><p>Manage products, sizes, stock and orders.</p></div><a href="/">← View website</a></header><div class="notice" role="status" id="status">Connecting securely…</div><section><h2>Add new product</h2><form id="product-form"><label>Category<select name="category" required><option value="">Choose category</option><option>Tops</option><option>Knitwear</option><option>Bottoms</option><option>Dresses & Skirts</option><option>Sets</option><option>Outerwear</option><option>Sleepwear</option><option>Accessories</option><option>Other</option></select></label><label>Name<input name="name" required maxlength="120" placeholder="e.g. Y2K Lace Henley"></label><label>Style group (optional — defaults to the product name)<input name="style_group" maxlength="80" placeholder="e.g. Hammond"></label><label>Material<input name="fabric" maxlength="160" placeholder="e.g. 60% cotton, 35% rayon, 5% elastane"></label><label>Description<textarea name="description" maxlength="2000"></textarea></label><label>Price (€)<input name="price" type="number" min="0" step=".01" required></label><h3>Colours, sizes & stock</h3><p class="hint">Add each colour and its photos, choose sizes, and enter stock. Save everything together. Each colour stays as its own linked listing so its photos and stock are easy to manage.</p><div id="new-colours"></div><button type="button" class="secondary" id="add-colour">+ Add another colour</button><button type="submit">Save all colours & sizes as drafts</button><p id="create-message" class="form-message" role="status" tabindex="-1"></p></form></section><section aria-labelledby="products-title"><h2 id="products-title">Products</h2><div class="hint" id="product-count"></div><div class="catalogue-tools"><label>Search<input id="product-search" type="search" placeholder="Search name, colour or SKU"></label><label>Category<select id="category-filter"><option value="">All categories</option><option>Tops</option><option>Knitwear</option><option>Bottoms</option><option>Dresses & Skirts</option><option>Sets</option><option>Outerwear</option><option>Sleepwear</option><option>Accessories</option><option>Other</option><option>Uncategorised</option></select></label><label>Status<select id="status-filter"><option value="">All</option><option value="draft">Drafts</option><option value="published">Published</option></select></label></div><div id="draft-products"></div><div id="published-products"></div></section><section aria-labelledby="orders-title"><h2 id="orders-title">Orders</h2><p class="hint">Orders appear once payments are integrated; checkout is not yet available.</p><div id="orders"></div></section></main><script type="module">// Private admin API. Fails closed until D1 and Cloudflare Access are configured.
+// Authentication: verified Cloudflare Access RS256 JWT from Cf-Access-Jwt-Assertion.
+const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
+const b64url=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-s.length%4)%4)),c=>c.charCodeAt(0));
+async function authorized(request,env){
+ const domain=env.ACCESS_TEAM_DOMAIN, aud=env.ACCESS_AUD;
+ if(!domain||!aud)return false;
+ const token=request.headers.get('Cf-Access-Jwt-Assertion');
+ if(!token)return false;
+ const parts=token.split('.');if(parts.length!==3)return false;
+ try{
+  const header=JSON.parse(new TextDecoder().decode(b64url(parts[0])));
+  const claims=JSON.parse(new TextDecoder().decode(b64url(parts[1])));
+  if(header.alg!=='RS256'||!header.kid||claims.iss!==`https://${domain}`||!Array.isArray(claims.aud)||!claims.aud.includes(aud)||!Number.isFinite(claims.exp)||claims.exp<=Date.now()/1000||!Number.isFinite(claims.nbf)||claims.nbf>Date.now()/1000)return false;
+  const r=await fetch(`https://${domain}/cdn-cgi/access/certs`);
+  if(!r.ok)return false;
+  const keys=(await r.json()).keys||[];
+  const jwk=keys.find(k=>k.kid===header.kid&&k.kty==='RSA');
+  if(!jwk)return false;
+  const key=await crypto.subtle.importKey('jwk',jwk,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['verify']);
+  return crypto.subtle.verify('RSASSA-PKCS1-v1_5',key,b64url(parts[2]),new TextEncoder().encode(parts[0]+'.'+parts[1]));
+ }catch{return false;}
+}
+function fail(message,status=400){return json({error:message},status);}
+async function handler({request,env}){
+ if(!await authorized(request,env))return fail('Admin access is not configured or authentication has expired.',403);
+ if(!env.DB)return fail('D1 database is not configured.',503);
+ const url=new URL(request.url),section=url.pathname.replace(/^\/api\/admin\/?/,'').replace(/\/$/,'');
+ try{
+  if(request.method==='POST'&&section==='images'){
+   if(!env.IMAGES)return fail('Image storage is not configured.',503);
+   const max=5*1024*1024;
+   if(Number(request.headers.get('content-length')||0)>max+65536)return fail('Photo must be smaller than 5 MB.',413);
+   let form;try{form=await request.formData();}catch{return fail('Invalid photo upload.');}
+   const photo=form.get('photo');
+   if(!photo||typeof photo.arrayBuffer!=='function'||photo.size<1||photo.size>max)return fail('Please choose an image smaller than 5 MB.');
+   const types={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+   const ext=types[photo.type];if(!ext)return fail('Use a JPG, PNG or WebP image.');
+   const data=new Uint8Array(await photo.arrayBuffer());
+   const jpeg=data[0]===255&&data[1]===216&&data[2]===255;
+   const png=data.length>8&&[137,80,78,71,13,10,26,10].every((n,i)=>data[i]===n);
+   const webp=data.length>12&&new TextDecoder().decode(data.slice(0,4))==='RIFF'&&new TextDecoder().decode(data.slice(8,12))==='WEBP';
+   if(!(ext==='jpg'&&jpeg||ext==='png'&&png||ext==='webp'&&webp))return fail('The selected file is not a valid image.');
+   const key=crypto.randomUUID()+'.'+ext;
+   await env.IMAGES.put(key,data,{httpMetadata:{contentType:photo.type},customMetadata:{source:'maelinne-admin'}});
+   return json({url:'/api/images/'+key},201);
+  }
+  if(request.method==='GET'&&section==='products'){
+   const products=(await env.DB.prepare('SELECT * FROM products ORDER BY created_at DESC').all()).results;
+   const variants=(await env.DB.prepare('SELECT * FROM variants ORDER BY label').all()).results;const galleries={};if(env.IMAGES){await Promise.all(products.map(async p=>{const obj=await env.IMAGES.get('galleries/'+p.id+'.json');if(obj){try{galleries[p.id]=JSON.parse(await obj.text());}catch{}}}));}
+   return json({products:products.map(p=>({...p,images:Array.isArray(galleries[p.id]?.images)?galleries[p.id].images:(p.image_url?[p.image_url]:[]),color:galleries[p.id]?.color||'',style_group:galleries[p.id]?.style_group||'',category:galleries[p.id]?.category||'Uncategorised',fabric:galleries[p.id]?.fabric||'',variants:variants.filter(v=>v.product_id===p.id)}))});
+  }
+  if(request.method==='GET'&&section==='orders'){
+   const orders=(await env.DB.prepare('SELECT id,status,customer_email,customer_name,total_cents,created_at FROM orders ORDER BY created_at DESC LIMIT 100').all()).results;
+   return json({orders});
+  }
+  if(request.method==='PUT'&&/^products\/[a-f0-9-]{36}\/gallery$/.test(section)){
+   if(!env.IMAGES)return fail('Image storage unavailable.',503);
+   const id=section.split('/')[1];if(!await env.DB.prepare('SELECT id FROM products WHERE id=?').bind(id).first())return fail('Product not found.',404);
+   let v;try{v=await request.json();}catch{return fail('Invalid JSON.');}
+   const good=url=>typeof url==='string'&&(/^\/api\/images\/[a-f0-9-]{36}\.(jpg|png|webp)$/.test(url)||/^\/assets\/[a-zA-Z0-9._/-]+$/.test(url));
+   if(!Array.isArray(v.images)||v.images.length>12||v.images.some(url=>!good(url))||typeof v.color!=='string'||v.color.length>80||typeof v.style_group!=='string'||v.style_group.length>80||typeof v.category!=='string'||v.category.length>50||typeof v.fabric!=='string'||v.fabric.length>160)return fail('Invalid colour or photo list.');
+   const images=[...new Set(v.images)],color=v.color.trim(),style_group=v.style_group.trim(),category=v.category.trim()||'Uncategorised',fabric=v.fabric.trim();
+   await env.IMAGES.put('galleries/'+id+'.json',JSON.stringify({images,color,style_group,category,fabric}),{httpMetadata:{contentType:'application/json'}});
+   await env.DB.prepare('UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(images[0]||'',id).run();return json({ok:true});
+  }
+  // Save a whole colour/size grid with the product, preserving existing variant IDs.
+  if((request.method==='POST'&&section==='listings')||(request.method==='PUT'&&/^products\/[a-f0-9-]{36}\/listing$/.test(section))){
+   if(!env.IMAGES)return fail('Image storage unavailable.',503);
+   let body;try{body=await request.json();}catch{return fail('Invalid JSON.');}
+   if(!body||typeof body!=='object')return fail('Invalid listing.');
+   const editing=request.method==='PUT',productId=editing?section.split('/')[1]:null;
+   const existing=editing?await env.DB.prepare('SELECT * FROM products WHERE id=?').bind(productId).first():null;
+   if(editing&&!existing)return fail('Product not found.',404);
+   const name=String(body.name||'').trim(),description=String(body.description||'').trim(),price=body.price_cents;
+   if(!name||name.length>120||description.length>2000||!Number.isSafeInteger(price)||price<0||price>10000000)return fail('Check the name, description and price.');
+   const colours=editing?[body]:body.colours;
+   if(!Array.isArray(colours)||!colours.length||colours.length>8)return fail('Add between one and eight colours.');
+   const validImage=url=>typeof url==='string'&&(/^\/api\/images\/[a-f0-9-]{36}\.(jpg|png|webp)$/.test(url)||/^\/assets\/[a-zA-Z0-9._/-]+$/.test(url));
+   const oldVariants=editing?(await env.DB.prepare('SELECT * FROM variants WHERE product_id=?').bind(productId).all()).results:[];
+   const knownIds=new Set(oldVariants.map(v=>v.id)),seenIds=new Set(),seenSkus=new Set(),seenColours=new Set(),planned=[];
+   let total=0;
+   for(const colour of colours){
+    if(!colour||typeof colour!=='object')return fail('Invalid colour entry.');
+    const color=String(colour.color||'').trim(),style_group=String(body.style_group||name.slice(0,80)).trim(),category=String(body.category||'Other').trim(),fabric=String(body.fabric||'').trim();
+    if(color.length>80||style_group.length>80||category.length>50||fabric.length>160)return fail('Check the colour, style group, category and material lengths.');
+    if(colours.length>1&&!color)return fail('Give each colour a name.');
+    if(seenColours.has(color.toLowerCase()))return fail('Each colour must have a different name.');seenColours.add(color.toLowerCase());
+    if(!Array.isArray(colour.images)||colour.images.length>12||colour.images.some(image=>!validImage(image)))return fail('Use up to 12 uploaded product photos per colour.');
+    if(!Array.isArray(colour.variants)||colour.variants.length>20)return fail('Check the size rows.');
+    total+=colour.variants.length;if(total>40)return fail('Save up to 40 size entries at a time.');
+    const id=editing?productId:crypto.randomUUID(),labels=new Set(),variants=[];
+    for(const row of colour.variants){
+     if(!row||typeof row!=='object')return fail('Invalid size row.');
+     const label=String(row.label||'').trim(),quantity=row.quantity,sku=String(row.sku||'').trim()||'ML-'+crypto.randomUUID();
+     if(!label||label.length>80||sku.length>80||!Number.isSafeInteger(quantity)||quantity<0||quantity>100000)return fail('Each size needs a name and a whole-number stock quantity from 0 to 100000.');
+     if(labels.has(label.toLowerCase()))return fail('Size '+label+' appears twice in '+(color||'this listing')+'.');labels.add(label.toLowerCase());
+     if(seenSkus.has(sku))return fail('SKU '+sku+' is repeated. Leave SKU blank to generate a unique one.');seenSkus.add(sku);
+     if(row.id&&(!knownIds.has(row.id)||seenIds.has(row.id)))return fail('A size row is no longer valid. Reload the product and try again.',409);
+     if(row.id)seenIds.add(row.id);
+     variants.push({id:row.id||crypto.randomUUID(),existing:!!row.id,label,sku,quantity});
+    }
+    planned.push({id,variants,gallery:{images:[...new Set(colour.images)],color,style_group,category,fabric}});
+   }
+   // Existing sizes are retained, including those used by orders. Set stock to zero instead.
+   if(editing&&oldVariants.some(v=>!seenIds.has(v.id)))return fail('Existing sizes must stay in the list. Set their stock to 0 if unavailable.');
+   const requested=planned.flatMap(item=>item.variants);
+   if(requested.length){
+    const duplicates=(await env.DB.prepare('SELECT id,sku FROM variants WHERE sku IN ('+requested.map(()=>'?').join(',')+')').bind(...requested.map(row=>row.sku)).all()).results;
+    for(const duplicate of duplicates){if(!requested.some(row=>row.existing&&row.id===duplicate.id&&row.sku===duplicate.sku))return fail('SKU '+duplicate.sku+' is already used. Leave SKU blank for a new size, or choose another SKU.',409);}
+   }
+   const statements=[],backups=[];
+   for(const item of planned){
+    const key='galleries/'+item.id+'.json',previous=editing?await env.IMAGES.get(key):null;
+    backups.push({key,value:previous?await previous.text():null});
+    if(editing){statements.push(env.DB.prepare('UPDATE products SET name=?,description=?,image_url=?,price_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(name,description,item.gallery.images[0]||'',price,item.id));}
+    else{statements.push(env.DB.prepare('INSERT INTO products (id,name,description,image_url,price_cents,active) VALUES (?,?,?,?,?,0)').bind(item.id,name,description,item.gallery.images[0]||'',price));}
+    for(const row of item.variants){
+     statements.push(row.existing?env.DB.prepare('UPDATE variants SET label=?,sku=?,quantity=? WHERE id=? AND product_id=?').bind(row.label,row.sku,row.quantity,row.id,item.id):env.DB.prepare('INSERT INTO variants (id,product_id,label,sku,quantity) VALUES (?,?,?,?,?)').bind(row.id,item.id,row.label,row.sku,row.quantity));
+    }
+   }
+   try{
+    for(const item of planned)await env.IMAGES.put('galleries/'+item.id+'.json',JSON.stringify(item.gallery),{httpMetadata:{contentType:'application/json'}});
+    await env.DB.batch(statements);
+   }catch(error){
+    await Promise.allSettled(backups.map(b=>b.value===null?env.IMAGES.delete(b.key):env.IMAGES.put(b.key,b.value,{httpMetadata:{contentType:'application/json'}})));
+    if(String(error).includes('UNIQUE'))return fail('A SKU was saved elsewhere at the same time. Use another SKU or leave new SKUs blank.',409);
+    throw error;
+   }
+   return json({ok:true,ids:planned.map(item=>item.id)},editing?200:201);
+  }
+  if(request.method==='POST'&&section==='products'){
+   let v;try{v=await request.json();}catch{return fail('Invalid JSON');}
+   const name=String(v.name||'').trim(),description=String(v.description||'').trim(),image=String(v.image_url||'').trim(),price=Number(v.price_cents),active=v.active===true?1:0;
+   if(!name||name.length>120||description.length>2000||!Number.isSafeInteger(price)||price<0||price>10000000)return fail('Check name, description and price.');
+   if(image&&!(/^\/api\/images\/[0-9a-f-]{36}\.(jpg|png|webp)$/.test(image)||/^\/assets\/[a-zA-Z0-9._/-]+$/.test(image)||/^https:\/\/[a-zA-Z0-9.-]+\/[a-zA-Z0-9._/?=&%-]+$/.test(image)))return fail('Image must be an HTTPS URL or an assets/ path.');
+   const id=crypto.randomUUID();
+   await env.DB.prepare('INSERT INTO products (id,name,description,image_url,price_cents,active) VALUES (?,?,?,?,?,?)').bind(id,name,description,image,price,active).run();
+   return json({id},201);
+  }
+  if(request.method==='POST'&&section==='variants'){
+   let v;try{v=await request.json();}catch{return fail('Invalid JSON');}
+   const product=String(v.product_id||''),label=String(v.label||'').trim(),sku=String(v.sku||'').trim(),qty=Number(v.quantity);
+   if(!product||!label||label.length>80||!sku||sku.length>80||!Number.isSafeInteger(qty)||qty<0||qty>100000)return fail('Check variant, SKU and quantity.');
+   const id=crypto.randomUUID();
+   await env.DB.prepare('INSERT INTO variants (id,product_id,label,sku,quantity) VALUES (?,?,?,?,?)').bind(id,product,label,sku,qty).run();
+   return json({id},201);
+  }
+  if(request.method==='DELETE'&&/^products\/[a-f0-9-]{36}$/.test(section)){
+   const id=section.slice(9);
+   const existing=await env.DB.prepare('SELECT id,active FROM products WHERE id=?').bind(id).first();
+   if(!existing)return fail('Product not found',404);
+   if(existing.active)return fail('Unpublish this product before deleting it.',409);
+   await env.DB.batch([
+    env.DB.prepare('DELETE FROM variants WHERE product_id=?').bind(id),
+    env.DB.prepare('DELETE FROM products WHERE id=? AND active=0').bind(id)
+   ]);
+   if(env.IMAGES){await env.IMAGES.delete('galleries/'+id+'.json');}
+   return json({ok:true});
+  }
+  if(request.method==='PATCH'&&section.startsWith('products/')){
+   const id=section.slice(9);let v;try{v=await request.json();}catch{return fail('Invalid JSON');}
+   const existing=await env.DB.prepare('SELECT * FROM products WHERE id=?').bind(id).first();if(!existing)return fail('Product not found',404);
+   const name=v.name===undefined?existing.name:String(v.name).trim();const description=v.description===undefined?existing.description:String(v.description).trim();const image=v.image_url===undefined?existing.image_url:String(v.image_url).trim();const price=v.price_cents===undefined?existing.price_cents:Number(v.price_cents);const active=typeof v.active==='boolean'?(v.active?1:0):existing.active;
+   if(!name||name.length>120||description.length>2000||!Number.isSafeInteger(price)||price<0||price>10000000)return fail('Check product name, description and price.');
+   if(image&&!(/^\/api\/images\/[0-9a-f-]{36}\.(jpg|png|webp)$/.test(image)||/^\/assets\/[a-zA-Z0-9._/-]+$/.test(image)||/^https:\/\/[a-zA-Z0-9.-]+\/[a-zA-Z0-9._/?=&%-]+$/.test(image)))return fail('Invalid image URL.');
+   const result=await env.DB.prepare('UPDATE products SET name=?,description=?,image_url=?,price_cents=?,active=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(name,description,image,price,active,id).run();
+   return result.meta.changes?json({ok:true}):fail('Product not found',404);
+  }
+  if(request.method==='PATCH'&&section.startsWith('variants/')){
+   const id=section.slice(9);let v;try{v=await request.json();}catch{return fail('Invalid JSON');}
+   const qty=Number(v.quantity);
+   if(!Number.isSafeInteger(qty)||qty<0||qty>100000)return fail('Invalid stock quantity.');
+   const result=await env.DB.prepare('UPDATE variants SET quantity=? WHERE id=?').bind(qty,id).run();
+   return result.meta.changes?json({ok:true}):fail('Variant not found',404);
+  }
+  return fail('Not found',404);
+ }catch(e){console.error('Admin API failure',e);return fail('Unable to complete request. Check database setup or duplicate SKU.',500);}
+}
+const onRequest=handler;
+
+
+async function sandbox() {
+ const nativeFetch=window.fetch.bind(window),objects=new Map();
+ const state={products:[],variants:[],orders:[]},trace=[];
+ const sql=async statements=>{
+  const before=structuredClone(state);const result=[];
+  try{for(const {q,values:v=[]} of statements){let rows=[],changes=0;
+   if(q.startsWith('SELECT')){
+    const table=q.includes('FROM variants')?'variants':q.includes('FROM orders')?'orders':'products';rows=state[table].map(x=>({...x}));
+    if(q.includes('WHERE product_id=?'))rows=rows.filter(x=>x.product_id===v[0]);
+    else if(q.includes('WHERE sku IN'))rows=rows.filter(x=>v.includes(x.sku));
+    else if(q.includes('WHERE sku=?'))rows=rows.filter(x=>x.sku===v[0]);
+    else if(q.includes('WHERE id=?'))rows=rows.filter(x=>x.id===v[0]);
+   }else if(q.startsWith('INSERT INTO products')){
+    const [id,name,description,image_url,price_cents,active=0]=v;state.products.push({id,name,description,image_url,price_cents,active});changes=1;
+   }else if(q.startsWith('INSERT INTO variants')){
+    const [id,product_id,label,sku,quantity]=v;if(state.variants.some(x=>x.sku===sku))throw Error('UNIQUE constraint failed: variants.sku');state.variants.push({id,product_id,label,sku,quantity});changes=1;
+   }else if(q.startsWith('UPDATE variants SET label')){
+    const [label,sku,quantity,id,product_id]=v;const row=state.variants.find(x=>x.id===id&&x.product_id===product_id);if(row){Object.assign(row,{label,sku,quantity});changes=1;}
+   }else if(q.startsWith('UPDATE products SET')){
+    const withActive=q.includes('active=?');const [name,description,image_url,price_cents]=v;const id=v[v.length-1];const row=state.products.find(x=>x.id===id);if(row){Object.assign(row,{name,description,image_url,price_cents});if(withActive)row.active=v[4];changes=1;}
+   }else if(q.includes('missing_table'))throw Error('no such table: missing_table');
+   else throw Error('Test adapter does not implement: '+q);
+   result.push({results:rows,meta:{changes}});
+  }trace.push({statements,ok:true});return result;}catch(error){Object.assign(state,before);trace.push({statements,ok:false});throw error;}
+ };
+ const DB={prepare(q){return {q,values:[],bind(...values){this.values=values;return this;},async all(){return (await sql([this]))[0];},async first(){return (await this.all()).results[0]||null;},async run(){return (await sql([this]))[0];}};},batch:sql};
+ const env={DB,IMAGES:{async get(key){return objects.has(key)?{text:async()=>objects.get(key)}:null;},async put(key,value){objects.set(key,value);},async delete(key){objects.delete(key);}},ACCESS_TEAM_DOMAIN:'local-test.example',ACCESS_AUD:'test-audience'};
+ const keys=await crypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['sign','verify']);
+ const jwk=await crypto.subtle.exportKey('jwk',keys.publicKey);jwk.kid='test';
+ const encode=value=>btoa(typeof value==='string'?value:String.fromCharCode(...value)).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
+ const jwtBody=encode(JSON.stringify({alg:'RS256',kid:'test'}))+'.'+encode(JSON.stringify({iss:'https://local-test.example',aud:['test-audience'],nbf:Math.floor(Date.now()/1000)-60,exp:Math.floor(Date.now()/1000)+3600}));
+ const token=jwtBody+'.'+encode(new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5',keys.privateKey,new TextEncoder().encode(jwtBody))));
+ window.fetch=async(input,options={})=>{
+  if(input==='https://local-test.example/cdn-cgi/access/certs')return Response.json({keys:[jwk]});
+  if(typeof input==='string'&&input.startsWith('/api/admin/')){
+   const headers=new Headers(options.headers);headers.set('Cf-Access-Jwt-Assertion',token);
+   return onRequest({request:new Request('https://test.local'+input,{...options,headers}),env});
+  }
+  return nativeFetch(input,options);
+ };
+ return {env,objects,sql,trace,async reset(){objects.clear();state.products=[];state.variants=[];state.orders=[];trace.length=0;},call:async(path,method,body,auth=true)=>onRequest({request:new Request('https://test.local/api/admin/'+path,{method,headers:{'content-type':'application/json',...(auth?{'Cf-Access-Jwt-Assertion':token}:{})},...(body===undefined?{}:{body:JSON.stringify(body)})}),env})};
+}
+
+await sandbox();
+const node = (tag, text) => { const el = document.createElement(tag); if (text !== undefined) el.textContent = text; return el; };
+const status = document.getElementById('status');
+const draftsEl = document.getElementById('draft-products');
+const publishedEl = document.getElementById('published-products');
+const ordersEl = document.getElementById('orders');
+const createForm = document.getElementById('product-form');
+const search = document.getElementById('product-search');
+const categoryFilter = document.getElementById('category-filter');
+const statusFilter = document.getElementById('status-filter');
+const categories = ['Tops','Knitwear','Bottoms','Dresses & Skirts','Sets','Outerwear','Sleepwear','Accessories','Other'];
+const euros = cents => new Intl.NumberFormat('en-IE',{style:'currency',currency:'EUR'}).format(cents/100);
+let allProducts = [], busy = false;
+const hasUnsavedChanges = () => !!document.querySelector('form[data-dirty="true"]');
+function markDirty(element) { const form = element.closest("form"); if (form) form.dataset.dirty = "true"; }
+const uploaded = new WeakMap();
+function notify(message) { status.textContent = message; }
+async function api(path, options = {}) {
+  const response = await fetch('/api/admin/' + path, {credentials:'same-origin', ...options, headers:{'content-type':'application/json', ...options.headers}});
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw Error(response.status === 403 ? 'Dashboard access could not be verified. Sign in again in another tab, then retry. Your entries are still here.' : data.error || 'Request failed. Please try again.');
+  return data;
+}
+function field(parent, title, element = node('input')) {
+  const label = node('label', title); label.append(element); parent.append(label); return element;
+}
+function button(text, action, secondary = true) {
+  const el = node('button', text); el.type = 'button'; if (secondary) el.className = 'secondary'; el.onclick = action; return el;
+}
+function feedback(parent) { const el = node('p'); el.className = 'form-message'; el.setAttribute('role','status'); el.tabIndex = -1; parent.append(el); return el; }
+async function save(form, message, action, success) {
+  if (busy) return;
+  busy = true;
+  const controls = [...form.querySelectorAll('button,input,select,textarea')];
+  const wasDisabled = controls.map(el => el.disabled);
+  controls.forEach(el => el.disabled = true);
+  message.textContent = 'Saving…'; message.classList.remove('error');
+  try {
+    await action();
+    message.textContent = success; notify(success); form.dataset.dirty = 'false';
+    try { await loadProducts(); } catch { notify(success + ' Refresh the product list when your connection returns.'); }
+  } catch (error) {
+    message.textContent = error.message; message.classList.add('error'); notify('Could not save: ' + error.message); message.focus();
+  } finally { controls.forEach((el,i) => el.disabled = wasDisabled[i]); busy = false; }
+}
+async function uploadPhoto(file) {
+  if (uploaded.has(file)) return uploaded.get(file);
+  if (!['image/jpeg','image/png','image/webp'].includes(file.type) || !file.size || file.size > 5*1024*1024) throw Error('Choose JPG, PNG or WebP photos smaller than 5 MB.');
+  const data = new FormData(); data.append('photo',file);
+  const response = await fetch('/api/admin/images',{method:'POST',credentials:'same-origin',body:data});
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw Error(response.status === 403 ? 'Dashboard access could not be verified. Sign in again, then retry; your entries are still here.' : result.error || 'Photo upload failed.');
+  uploaded.set(file,result.url); return result.url;
+}
+function sizeEditor(parent, initial = []) {
+  const section = node('div'); section.className = 'size-editor'; parent.append(section);
+  section.append(node('h4','Sizes & stock'), node('p','Add the sizes you have, then enter the quantity for each. Leave SKU blank to generate it automatically.'));
+  const quick = node('div'); quick.className = 'size-shortcuts'; section.append(quick);
+  const tableWrap = node('div'); tableWrap.className = 'size-table-wrap';
+  const table = node('table'); table.className = 'size-table';
+  const head = node('thead'), header = node('tr');
+  for (const title of ['Size','In stock','SKU (optional)','']) { const th = node('th', title); th.scope = 'col'; if (title.startsWith('SKU')) th.className = 'sku-column'; header.append(th); }
+  head.append(header); const body = node('tbody'); table.append(head,body); tableWrap.append(table); section.append(tableWrap);
+  const rows = [];
+  function addRow(value = {}) {
+    const row = node('tr'); const size = node('input'); size.value = value.label || ''; size.maxLength = 80; size.required = true; size.setAttribute('aria-label','Size'); size.placeholder = 'e.g. S or 10';
+    const qty = node('input'); qty.type = 'number'; qty.min = 0; qty.max = 100000; qty.step = 1; qty.required = true; qty.value = value.quantity ?? 0; qty.setAttribute('aria-label','In stock');
+    const sku = node('input'); sku.value = value.sku || ''; sku.maxLength = 80; sku.placeholder = 'Automatic'; sku.setAttribute('aria-label','SKU (optional)');
+    const entry = {id:value.id, row, size, qty, sku}; rows.push(entry);
+    for (const [input, className] of [[size,''],[qty,''],[sku,'sku-column']]) { const td = node('td'); td.className = className; td.append(input); row.append(td); }
+    const actions = node('td');
+    if (!value.id) actions.append(button('Remove', () => { rows.splice(rows.indexOf(entry),1); row.remove(); markDirty(section); }));
+    else actions.append(node('span','Use 0 if sold out'));
+    row.append(actions); body.append(row); return entry;
+  }
+  const addSize = label => { if (!rows.some(r => r.size.value.trim().toLowerCase() === label.toLowerCase())) addRow({label}); markDirty(section); };
+  for (const label of ['XS','S','M','L','XL','XXL']) quick.append(button('+ ' + label, () => addSize(label)));
+  quick.append(button('+ Other size', () => addRow().size.focus()));
+  const skuToggle = node('input'); skuToggle.type = 'checkbox';
+  field(section,'Show SKUs (optional)',skuToggle).parentElement.className = 'inline-check';
+  skuToggle.onchange = () => table.classList.toggle('show-skus',skuToggle.checked);
+  initial.forEach(addRow);
+  return () => rows.map(r => ({...(r.id ? {id:r.id} : {}),label:r.size.value.trim(),sku:r.sku.value.trim(),quantity:r.qty.value === '' ? null : Number(r.qty.value)}));
+}
+function colourEditor(parent, initial = {}, removable = false) {
+  const group = node('fieldset'); group.className = 'colour-editor'; group.append(node('legend','Colour, photos & sizes')); parent.append(group);
+  const colour = field(group,'Colour',node('input')); colour.value = initial.color || ''; colour.maxLength = 80; colour.placeholder = 'e.g. Oatmeal';
+  const photos = [...(initial.images || [])], gallery = node('div'); gallery.className = 'gallery-editor'; group.append(gallery);
+  function drawPhotos() {
+    gallery.replaceChildren();
+    photos.forEach((url,index) => {
+      const tile = node('div'); tile.className = 'photo-tile'; const image = node('img'); image.src = url; image.alt = 'Product photo ' + (index+1); tile.append(image);
+      tile.append(button('Remove photo', () => { photos.splice(index,1); drawPhotos(); drawPending(); markDirty(group); }));
+      if (index) tile.append(button('Make cover', () => { photos.splice(index,1); photos.unshift(url); drawPhotos(); markDirty(group); },false));
+      else tile.append(node('span','Cover photo'));
+      gallery.append(tile);
+    });
+  }
+  drawPhotos();
+  const files = field(group,'Add photos for this colour (up to 12)',node('input')); files.type = 'file'; files.multiple = true; files.accept = 'image/jpeg,image/png,image/webp';
+  group.append(node('p','Choose several photos together, or open the picker again to add more. On a Mac, hold Command while clicking photos.'));
+  const pending = [], previews = node('div'); previews.className = 'selected-photos gallery-editor'; group.append(previews);
+  const photoCount = node('p'); photoCount.setAttribute('role','status'); group.append(photoCount);
+  const photoError = feedback(group);
+  function drawPending() {
+    previews.replaceChildren();
+    for (const file of pending) {
+      const tile = node('div'); tile.className = 'photo-tile';
+      const image = node('img'); image.alt = 'Selected photo: ' + file.name;
+      const url = URL.createObjectURL(file); image.src = url; image.onload = image.onerror = () => URL.revokeObjectURL(url);
+      tile.append(image, node('span',file.name), button('Remove selected photo', () => {
+        pending.splice(pending.indexOf(file),1); drawPending(); markDirty(group);
+      }));
+      previews.append(tile);
+    }
+    photoCount.textContent = photos.length + pending.length + ' of 12 photos' + (pending.length ? ' · ' + pending.length + ' ready to upload when you save' : '');
+  }
+  files.onchange = () => {
+    const selected = [...files.files];
+    const added = selected.filter(file => !pending.some(p => p.name === file.name && p.size === file.size && p.lastModified === file.lastModified));
+    const invalid = added.find(file => !['image/jpeg','image/png','image/webp'].includes(file.type) || !file.size || file.size > 5*1024*1024);
+    let error = '';
+    if (invalid) error = invalid.name + ': choose JPG, PNG or WebP photos smaller than 5 MB.';
+    else if (photos.length + pending.length + added.length > 12) error = 'That selection would exceed 12 photos. Remove a photo or choose fewer files; your previous selections are still here.';
+    else { pending.push(...added); if (added.length) markDirty(group); }
+    photoError.textContent = error; photoError.classList.toggle('error',!!error);
+    files.value = ''; // A fresh selection appends to the queue, including after cancelling the picker.
+    drawPending();
+  };
+  drawPending();
+  group.append(node('p','JPG, PNG or WebP; up to 5 MB each. Use photos of this colour.'));
+  const getSizes = sizeEditor(group,initial.variants || []);
+  if (removable) group.append(button('Remove this colour', () => { markDirty(group); group.remove(); }));
+  return {group, async read() {
+    if (photos.length + pending.length > 12) throw Error('Use no more than 12 photos per colour.');
+    const images = [...photos];
+    for (const file of pending) images.push(await uploadPhoto(file));
+    return {color:colour.value.trim(), images, variants:getSizes()};
+  }};
+}
+const colourContainer = document.getElementById('new-colours');
+let colourEditors = [];
+function addColour() { if (colourEditors.filter(c => c.group.isConnected).length >= 8) return; colourEditors.push(colourEditor(colourContainer,{},true)); }
+document.getElementById('add-colour').onclick = addColour; addColour();
+createForm.onsubmit = event => {
+  event.preventDefault();
+  const value = new FormData(createForm);
+  save(createForm,document.getElementById('create-message'),async () => {
+    const colours = [];
+    for (const editor of colourEditors.filter(c => c.group.isConnected)) colours.push(await editor.read());
+    if (!colours.length) throw Error('Add at least one colour.');
+    await api('listings',{method:'POST',body:JSON.stringify({name:value.get('name'),description:value.get('description'),price_cents:Math.round(Number(value.get('price'))*100),category:value.get('category'),fabric:value.get('fabric'),style_group:value.get('style_group'),colours})});
+    createForm.reset(); colourContainer.replaceChildren(); colourEditors = []; addColour();
+  },'Drafts saved with all colours, sizes and stock.');
+};
+async function loadProducts() { const result = await api('products'); allProducts = result.products; renderProducts(); }
+function renderProducts() {
+  const preserved = new Map([...document.querySelectorAll('.product')].filter(el => el.querySelector('form[data-dirty="true"]')).map(el => [el.dataset.productId,el]));
+  draftsEl.replaceChildren(); publishedEl.replaceChildren();
+  const q = search.value.trim().toLowerCase(), cat = categoryFilter.value, state = statusFilter.value;
+  const visible = allProducts.filter(p => preserved.has(p.id) || (!cat || (p.category || 'Uncategorised') === cat) && (!state || (state === 'draft' ? !p.active : !!p.active)) && (!q || [p.name,p.color,p.style_group,p.category,p.fabric,...p.variants.map(v => v.sku)].join(' ').toLowerCase().includes(q)));
+  document.getElementById('product-count').textContent = allProducts.length + ' colour listings · ' + visible.length + ' matching';
+  if (!visible.length) draftsEl.append(node('p','No matching products.'));
+  for (const product of visible) {
+    if (preserved.has(product.id)) { (product.active ? publishedEl : draftsEl).append(preserved.get(product.id)); continue; }
+    const box = node('div'); box.className = 'product'; box.dataset.productId = product.id; const details = node('details');
+    const summary = node('summary'); summary.append(node('h3',product.name + (product.color ? ' — ' + product.color : '') + ' · ' + euros(product.price_cents)),node('span',(product.active?'Published':'Draft') + ' · ' + product.variants.reduce((sum,v) => sum+v.quantity,0) + ' in stock')); details.append(summary); box.append(details);
+    const actions = node('div'); actions.className = 'product-actions'; details.append(actions);
+    const actionMessage = feedback(details);
+    actions.append(button(product.active?'Unpublish':'Publish',() => save(actions,actionMessage,() => api('products/'+product.id,{method:'PATCH',body:JSON.stringify({active:!product.active})}),'Product updated.')));
+    if (!product.active) actions.append(button('Delete draft',() => { if (window.confirm('Permanently delete the draft "'+product.name+'" and its sizes? This cannot be undone.')) save(actions,actionMessage,() => api('products/'+product.id,{method:'DELETE'}),'Draft deleted.'); }));
+    const form = node('form'); form.className = 'product-editor'; form.hidden = true;
+    const edit = button('Edit product, sizes & stock',() => { form.hidden = !form.hidden; edit.textContent = form.hidden ? 'Edit product, sizes & stock' : 'Close editor'; }); actions.append(edit);
+    const name = field(form,'Name'); name.required = true; name.maxLength = 120; name.value = product.name;
+    const category = field(form,'Category',node('select')); for (const title of categories) { const option = node('option',title); category.append(option); } category.value = categories.includes(product.category) ? product.category : 'Other';
+    const material = field(form,'Material'); material.maxLength = 160; material.value = product.fabric || '';
+    const description = field(form,'Description',node('textarea')); description.maxLength = 2000; description.value = product.description || '';
+    const style = field(form,'Style group (links other colours)'); style.maxLength = 80; style.value = product.style_group || '';
+    const price = field(form,'Price (€)'); price.type = 'number'; price.min = 0; price.step = '.01'; price.required = true; price.value = (product.price_cents/100).toFixed(2);
+    const editor = colourEditor(form,product);
+    const submit = node('button','Save product, sizes & stock'); submit.type = 'submit'; form.append(submit); const message = feedback(form);
+    form.onsubmit = event => { event.preventDefault(); save(form,message,async () => {
+      const colour = await editor.read();
+      await api('products/'+product.id+'/listing',{method:'PUT',body:JSON.stringify({...colour,name:name.value,description:description.value,price_cents:Math.round(Number(price.value)*100),category:category.value,fabric:material.value,style_group:style.value})});
+    },'Product, sizes and stock saved.'); };
+    details.append(form);
+    const stock = node('p',product.variants.length ? product.variants.map(v => v.label+': '+v.quantity).join(' · ') : 'No sizes yet — open the editor to add them.'); details.append(stock);
+    if (product.active) { const link = node('a','View product ↗'); link.href = '/product.html?id='+encodeURIComponent(product.id); link.target = '_blank'; link.rel = 'noopener'; details.append(link); }
+    (product.active ? publishedEl : draftsEl).append(box);
+  }
+}
+for (const input of [search,categoryFilter,statusFilter]) input.addEventListener('input',() => renderProducts());
+document.addEventListener('input',event => markDirty(event.target));
+window.addEventListener('beforeunload',event => { if (hasUnsavedChanges() || busy) { event.preventDefault(); event.returnValue = ''; } });
+(async () => {
+  try { await loadProducts(); notify('Dashboard connected.'); } catch (error) { notify(error.message); }
+  try { const {orders} = await api('orders'); ordersEl.replaceChildren(); if (!orders.length) ordersEl.append(node('p','No orders yet.')); for (const order of orders) { const el = node('div'); el.className = 'order'; el.append(node('strong',order.id+' — '+order.status),node('p',order.customer_email+' · '+euros(order.total_cents)+' · '+order.created_at)); ordersEl.append(el); } } catch { ordersEl.textContent = 'Orders are temporarily unavailable.'; }
+})();
+
+const testReport = document.createElement('section');
+testReport.id = 'photo-test-results';testReport.append(node('h2','Photo upload checks'));document.querySelector('main').prepend(testReport);
+const report = (text,ok=true) => testReport.append(node('p',(ok?'PASS: ':'FAIL: ')+text));
+try {
+ const input = createForm.querySelector('input[type=file]');
+ const bytes = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9uoAAAAASUVORK5CYII='),c=>c.charCodeAt(0));
+ const a = new File([bytes],'photo-a.png',{type:'image/png',lastModified:1});
+ const b = new File([bytes],'photo-b.png',{type:'image/png',lastModified:1});
+ const c = new File([bytes],'photo-c.png',{type:'image/png',lastModified:1});
+ const select = files => {const data=new DataTransfer();files.forEach(file=>data.items.add(file));input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));};
+ const count = () => createForm.querySelectorAll('.selected-photos .photo-tile').length;
+ const check = (condition,message) => {if(!condition)throw Error(message);report(message);};
+ select([a,b]);check(input.multiple&&count()===2,'Two photos can be selected together.');
+ select([c]);check(count()===3,'A second selection keeps the first two photos.');
+ select([c]);check(count()===3,'Selecting the same file twice does not duplicate it.');
+ createForm.querySelector('.selected-photos button').click();check(count()===2,'Removing one selected photo keeps the others.');
+ select([a]);check(count()===3,'A removed photo can be selected again.');
+ select(Array.from({length:10},(_,i)=>new File([bytes],'extra-'+i+'.png',{type:'image/png',lastModified:1})));
+ check(count()===3&&createForm.querySelector('.form-message.error').textContent.includes('exceed 12'),'An oversized batch preserves the existing selection.');
+ select([]);check(count()===3,'An empty selection preserves queued photos.');
+ createForm.elements.name.value='Photo test only';createForm.elements.category.value='Tops';createForm.elements.price.value='14.99';
+ const saved = new Promise((resolve,reject)=>{const obs=new MutationObserver(()=>{if(status.textContent.startsWith('Drafts saved')&&allProducts.some(p=>p.name==='Photo test only')){obs.disconnect();resolve();}else if(status.textContent.startsWith('Could not save')){obs.disconnect();reject(Error(status.textContent));}});obs.observe(document.body,{childList:true,subtree:true,characterData:true});setTimeout(()=>{obs.disconnect();reject(Error('Save did not complete'));},10000);});
+ createForm.requestSubmit();await saved;
+ const product=allProducts.find(p=>p.name==='Photo test only');check(product?.images.length===3,'All three queued images upload and persist with the draft.');
+ testReport.append(node('strong','8 passed; 0 failed'));
+} catch(error) {report(error.message,false);}
+</script></body></html>
