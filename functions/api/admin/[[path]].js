@@ -54,11 +54,11 @@ async function handler({request,env}){
    const orders=(await env.DB.prepare('SELECT id,status,customer_email,customer_name,total_cents,created_at FROM orders ORDER BY created_at DESC LIMIT 100').all()).results;
    return json({orders});
   }
-  if(request.method==='PUT'&&/^products\\/[a-f0-9-]{36}\\/gallery$/.test(section)){
+  if(request.method==='PUT'&&/^products\/[a-f0-9-]{36}\/gallery$/.test(section)){
    if(!env.IMAGES)return fail('Image storage unavailable.',503);
    const id=section.split('/')[1];if(!await env.DB.prepare('SELECT id FROM products WHERE id=?').bind(id).first())return fail('Product not found.',404);
    let v;try{v=await request.json();}catch{return fail('Invalid JSON.');}
-   const good=url=>typeof url==='string'&&(/^\\/api\\/images\\/[a-f0-9-]{36}\\.(jpg|png|webp)$/.test(url)||/^\\/assets\\/[a-zA-Z0-9._/-]+$/.test(url));
+   const good=url=>typeof url==='string'&&(/^\/api\/images\/[a-f0-9-]{36}\.(jpg|png|webp)$/.test(url)||/^\/assets\/[a-zA-Z0-9._/-]+$/.test(url));
    if(!Array.isArray(v.images)||v.images.length>12||v.images.some(url=>!good(url))||typeof v.color!=='string'||v.color.length>80)return fail('Invalid colour or photo list.');
    const images=[...new Set(v.images)],color=v.color.trim();
    await env.IMAGES.put('galleries/'+id+'.json',JSON.stringify({images,color}),{httpMetadata:{contentType:'application/json'}});
