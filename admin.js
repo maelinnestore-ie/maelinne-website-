@@ -89,7 +89,7 @@ function colourEditor(parent, initial = {}, removable = false) {
     gallery.replaceChildren();
     photos.forEach((url,index) => {
       const tile = node('div'); tile.className = 'photo-tile'; const image = node('img'); image.src = url; image.alt = 'Product photo ' + (index+1); tile.append(image);
-      tile.append(button('Remove photo', () => { photos.splice(index,1); drawPhotos(); markDirty(group); }));
+      tile.append(button('Remove photo', () => { photos.splice(index,1); drawPhotos(); drawPending(); markDirty(group); }));
       if (index) tile.append(button('Make cover', () => { photos.splice(index,1); photos.unshift(url); drawPhotos(); markDirty(group); },false));
       else tile.append(node('span','Cover photo'));
       gallery.append(tile);
@@ -97,18 +97,43 @@ function colourEditor(parent, initial = {}, removable = false) {
   }
   drawPhotos();
   const files = field(group,'Add photos for this colour (up to 12)',node('input')); files.type = 'file'; files.multiple = true; files.accept = 'image/jpeg,image/png,image/webp';
-  const previews = node('div'); previews.className = 'selected-photos'; group.append(previews);
-  files.onchange = () => {
+  group.append(node('p','Choose several photos together, or open the picker again to add more. On a Mac, hold Command while clicking photos.'));
+  const pending = [], previews = node('div'); previews.className = 'selected-photos gallery-editor'; group.append(previews);
+  const photoCount = node('p'); photoCount.setAttribute('role','status'); group.append(photoCount);
+  const photoError = feedback(group);
+  function drawPending() {
     previews.replaceChildren();
-    for (const file of files.files) { const image = node('img'); image.alt = 'Selected photo: ' + file.name; image.src = URL.createObjectURL(file); image.onload = () => URL.revokeObjectURL(image.src); previews.append(image); }
+    for (const file of pending) {
+      const tile = node('div'); tile.className = 'photo-tile';
+      const image = node('img'); image.alt = 'Selected photo: ' + file.name;
+      const url = URL.createObjectURL(file); image.src = url; image.onload = image.onerror = () => URL.revokeObjectURL(url);
+      tile.append(image, node('span',file.name), button('Remove selected photo', () => {
+        pending.splice(pending.indexOf(file),1); drawPending(); markDirty(group);
+      }));
+      previews.append(tile);
+    }
+    photoCount.textContent = photos.length + pending.length + ' of 12 photos' + (pending.length ? ' · ' + pending.length + ' ready to upload when you save' : '');
+  }
+  files.onchange = () => {
+    const selected = [...files.files];
+    const added = selected.filter(file => !pending.some(p => p.name === file.name && p.size === file.size && p.lastModified === file.lastModified));
+    const invalid = added.find(file => !['image/jpeg','image/png','image/webp'].includes(file.type) || !file.size || file.size > 5*1024*1024);
+    let error = '';
+    if (invalid) error = invalid.name + ': choose JPG, PNG or WebP photos smaller than 5 MB.';
+    else if (photos.length + pending.length + added.length > 12) error = 'That selection would exceed 12 photos. Remove a photo or choose fewer files; your previous selections are still here.';
+    else { pending.push(...added); if (added.length) markDirty(group); }
+    photoError.textContent = error; photoError.classList.toggle('error',!!error);
+    files.value = ''; // A fresh selection appends to the queue, including after cancelling the picker.
+    drawPending();
   };
+  drawPending();
   group.append(node('p','JPG, PNG or WebP; up to 5 MB each. Use photos of this colour.'));
   const getSizes = sizeEditor(group,initial.variants || []);
   if (removable) group.append(button('Remove this colour', () => { markDirty(group); group.remove(); }));
   return {group, async read() {
-    if (photos.length + files.files.length > 12) throw Error('Use no more than 12 photos per colour.');
+    if (photos.length + pending.length > 12) throw Error('Use no more than 12 photos per colour.');
     const images = [...photos];
-    for (const file of files.files) images.push(await uploadPhoto(file));
+    for (const file of pending) images.push(await uploadPhoto(file));
     return {color:colour.value.trim(), images, variants:getSizes()};
   }};
 }
