@@ -64,6 +64,71 @@ async function handler({request,env}){
    await env.IMAGES.put('galleries/'+id+'.json',JSON.stringify({images,color,style_group,category,fabric}),{httpMetadata:{contentType:'application/json'}});
    await env.DB.prepare('UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(images[0]||'',id).run();return json({ok:true});
   }
+  // Save a whole colour/size grid with the product, preserving existing variant IDs.
+  if((request.method==='POST'&&section==='listings')||(request.method==='PUT'&&/^products\/[a-f0-9-]{36}\/listing$/.test(section))){
+   if(!env.IMAGES)return fail('Image storage unavailable.',503);
+   let body;try{body=await request.json();}catch{return fail('Invalid JSON.');}
+   if(!body||typeof body!=='object')return fail('Invalid listing.');
+   const editing=request.method==='PUT',productId=editing?section.split('/')[1]:null;
+   const existing=editing?await env.DB.prepare('SELECT * FROM products WHERE id=?').bind(productId).first():null;
+   if(editing&&!existing)return fail('Product not found.',404);
+   const name=String(body.name||'').trim(),description=String(body.description||'').trim(),price=body.price_cents;
+   if(!name||name.length>120||description.length>2000||!Number.isSafeInteger(price)||price<0||price>10000000)return fail('Check the name, description and price.');
+   const colours=editing?[body]:body.colours;
+   if(!Array.isArray(colours)||!colours.length||colours.length>8)return fail('Add between one and eight colours.');
+   const validImage=url=>typeof url==='string'&&(/^\/api\/images\/[a-f0-9-]{36}\.(jpg|png|webp)$/.test(url)||/^\/assets\/[a-zA-Z0-9._/-]+$/.test(url));
+   const oldVariants=editing?(await env.DB.prepare('SELECT * FROM variants WHERE product_id=?').bind(productId).all()).results:[];
+   const knownIds=new Set(oldVariants.map(v=>v.id)),seenIds=new Set(),seenSkus=new Set(),seenColours=new Set(),planned=[];
+   let total=0;
+   for(const colour of colours){
+    if(!colour||typeof colour!=='object')return fail('Invalid colour entry.');
+    const color=String(colour.color||'').trim(),style_group=String(body.style_group||name.slice(0,80)).trim(),category=String(body.category||'Other').trim(),fabric=String(body.fabric||'').trim();
+    if(color.length>80||style_group.length>80||category.length>50||fabric.length>160)return fail('Check the colour, style group, category and material lengths.');
+    if(colours.length>1&&!color)return fail('Give each colour a name.');
+    if(seenColours.has(color.toLowerCase()))return fail('Each colour must have a different name.');seenColours.add(color.toLowerCase());
+    if(!Array.isArray(colour.images)||colour.images.length>12||colour.images.some(image=>!validImage(image)))return fail('Use up to 12 uploaded product photos per colour.');
+    if(!Array.isArray(colour.variants)||colour.variants.length>20)return fail('Check the size rows.');
+    total+=colour.variants.length;if(total>40)return fail('Save up to 40 size entries at a time.');
+    const id=editing?productId:crypto.randomUUID(),labels=new Set(),variants=[];
+    for(const row of colour.variants){
+     if(!row||typeof row!=='object')return fail('Invalid size row.');
+     const label=String(row.label||'').trim(),quantity=row.quantity,sku=String(row.sku||'').trim()||'ML-'+crypto.randomUUID();
+     if(!label||label.length>80||sku.length>80||!Number.isSafeInteger(quantity)||quantity<0||quantity>100000)return fail('Each size needs a name and a whole-number stock quantity from 0 to 100000.');
+     if(labels.has(label.toLowerCase()))return fail('Size '+label+' appears twice in '+(color||'this listing')+'.');labels.add(label.toLowerCase());
+     if(seenSkus.has(sku))return fail('SKU '+sku+' is repeated. Leave SKU blank to generate a unique one.');seenSkus.add(sku);
+     if(row.id&&(!knownIds.has(row.id)||seenIds.has(row.id)))return fail('A size row is no longer valid. Reload the product and try again.',409);
+     if(row.id)seenIds.add(row.id);
+     variants.push({id:row.id||crypto.randomUUID(),existing:!!row.id,label,sku,quantity});
+    }
+    planned.push({id,variants,gallery:{images:[...new Set(colour.images)],color,style_group,category,fabric}});
+   }
+   // Existing sizes are retained, including those used by orders. Set stock to zero instead.
+   if(editing&&oldVariants.some(v=>!seenIds.has(v.id)))return fail('Existing sizes must stay in the list. Set their stock to 0 if unavailable.');
+   const requested=planned.flatMap(item=>item.variants);
+   if(requested.length){
+    const duplicates=(await env.DB.prepare('SELECT id,sku FROM variants WHERE sku IN ('+requested.map(()=>'?').join(',')+')').bind(...requested.map(row=>row.sku)).all()).results;
+    for(const duplicate of duplicates){if(!requested.some(row=>row.existing&&row.id===duplicate.id&&row.sku===duplicate.sku))return fail('SKU '+duplicate.sku+' is already used. Leave SKU blank for a new size, or choose another SKU.',409);}
+   }
+   const statements=[],backups=[];
+   for(const item of planned){
+    const key='galleries/'+item.id+'.json',previous=editing?await env.IMAGES.get(key):null;
+    backups.push({key,value:previous?await previous.text():null});
+    if(editing){statements.push(env.DB.prepare('UPDATE products SET name=?,description=?,image_url=?,price_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(name,description,item.gallery.images[0]||'',price,item.id));}
+    else{statements.push(env.DB.prepare('INSERT INTO products (id,name,description,image_url,price_cents,active) VALUES (?,?,?,?,?,0)').bind(item.id,name,description,item.gallery.images[0]||'',price));}
+    for(const row of item.variants){
+     statements.push(row.existing?env.DB.prepare('UPDATE variants SET label=?,sku=?,quantity=? WHERE id=? AND product_id=?').bind(row.label,row.sku,row.quantity,row.id,item.id):env.DB.prepare('INSERT INTO variants (id,product_id,label,sku,quantity) VALUES (?,?,?,?,?)').bind(row.id,item.id,row.label,row.sku,row.quantity));
+    }
+   }
+   try{
+    for(const item of planned)await env.IMAGES.put('galleries/'+item.id+'.json',JSON.stringify(item.gallery),{httpMetadata:{contentType:'application/json'}});
+    await env.DB.batch(statements);
+   }catch(error){
+    await Promise.allSettled(backups.map(b=>b.value===null?env.IMAGES.delete(b.key):env.IMAGES.put(b.key,b.value,{httpMetadata:{contentType:'application/json'}})));
+    if(String(error).includes('UNIQUE'))return fail('A SKU was saved elsewhere at the same time. Use another SKU or leave new SKUs blank.',409);
+    throw error;
+   }
+   return json({ok:true,ids:planned.map(item=>item.id)},editing?200:201);
+  }
   if(request.method==='POST'&&section==='products'){
    let v;try{v=await request.json();}catch{return fail('Invalid JSON');}
    const name=String(v.name||'').trim(),description=String(v.description||'').trim(),image=String(v.image_url||'').trim(),price=Number(v.price_cents),active=v.active===true?1:0;
