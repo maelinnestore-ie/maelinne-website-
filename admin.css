@@ -9,3 +9,5 @@ form{max-width:850px}fieldset{min-width:0}.colour-editor{border:1px solid #d8c6b
 input[inputmode="decimal"]{max-width:200px}
 
 .price-tools{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.price-tools button{min-width:140px}
+
+.copy-notice{padding:16px;border-left:4px solid #481b20;background:#eee3d8;line-height:1.6;font-size:.9rem;border-radius:4px}

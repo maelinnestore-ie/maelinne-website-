@@ -147,8 +147,27 @@ function colourEditor(parent, initial = {}, removable = false) {
 }
 const colourContainer = document.getElementById('new-colours');
 let colourEditors = [];
-function addColour() { if (colourEditors.filter(c => c.group.isConnected).length >= 8) return; colourEditors.push(colourEditor(colourContainer,{},true)); }
-document.getElementById('add-colour').onclick = addColour; addColour();
+function addColour(initial = {}) { if (colourEditors.filter(c => c.group.isConnected).length >= 8) return; colourEditors.push(colourEditor(colourContainer,initial,true)); }
+document.getElementById('add-colour').onclick = () => addColour(); addColour();
+const copyNotice = node('div'); copyNotice.className = 'copy-notice'; copyNotice.hidden = true; copyNotice.setAttribute('role','status'); createForm.prepend(copyNotice);
+function duplicateItem(savedProduct) {
+  if (busy) return;
+  if (createForm.dataset.dirty === 'true' && !window.confirm('Replace the unsaved new product with a copy of "'+savedProduct.name+'"?')) return;
+  const product = allProducts.find(item => item.id === savedProduct.id) || savedProduct;
+  createForm.reset();
+  for (const element of createForm.querySelectorAll('[data-dirty]')) delete element.dataset.dirty;
+  const values = {name:product.name,description:product.description || '',category:categories.includes(product.category) ? product.category : 'Other',fabric:product.fabric || '',style_group:product.style_group || product.name.slice(0,80),price:(product.price_cents/100).toFixed(2)};
+  for (const [key,value] of Object.entries(values)) createForm.elements.namedItem(key).value = value;
+  colourContainer.replaceChildren(); colourEditors = [];
+  addColour({color:product.color || '',images:[...(product.images?.length ? product.images : product.image_url ? [product.image_url] : [])],variants:product.variants.map(variant => ({label:variant.label,quantity:0,sku:''}))});
+  copyNotice.textContent = 'Copy of '+product.name+(product.color ? ' — '+product.color : '')+' ready. Edit the details below, then save as a new draft. Stock starts at 0; new SKUs will be generated.';
+  copyNotice.hidden = false;
+  const message = document.getElementById('create-message'); message.textContent = ''; message.classList.remove('error');
+  createForm.dataset.dirty = 'true';
+  notify('Copy ready — save the new draft when you have finished editing.');
+  createForm.scrollIntoView({block:'start'});
+  createForm.elements.namedItem('name').focus({preventScroll:true});
+}
 createForm.onsubmit = event => {
   event.preventDefault();
   const value = new FormData(createForm);
@@ -157,7 +176,7 @@ createForm.onsubmit = event => {
     for (const editor of colourEditors.filter(c => c.group.isConnected)) colours.push(await editor.read());
     if (!colours.length) throw Error('Add at least one colour.');
     await api('listings',{method:'POST',body:JSON.stringify({name:value.get('name'),description:value.get('description'),price_cents:priceInCents(value.get('price')),category:value.get('category'),fabric:value.get('fabric'),style_group:value.get('style_group'),colours})});
-    createForm.reset(); colourContainer.replaceChildren(); colourEditors = []; addColour();
+    createForm.reset(); copyNotice.hidden = true; copyNotice.textContent = ''; colourContainer.replaceChildren(); colourEditors = []; addColour();
   },'Drafts saved with all colours, sizes and stock.');
 };
 async function loadProducts() { const result = await api('products'); allProducts = result.products; renderProducts(); }
@@ -174,6 +193,7 @@ function renderProducts() {
     const summary = node('summary'); summary.append(node('h3',product.name + (product.color ? ' — ' + product.color : '') + ' · ' + euros(product.price_cents)),node('span',(product.active?'Published':'Draft') + ' · ' + product.variants.reduce((sum,v) => sum+v.quantity,0) + ' in stock')); details.append(summary); box.append(details);
     const actions = node('div'); actions.className = 'product-actions'; details.append(actions);
     const actionMessage = feedback(details);
+    actions.append(button('Duplicate item',() => duplicateItem(product)));
     actions.append(button(product.active?'Unpublish':'Publish',() => save(actions,actionMessage,() => api('products/'+product.id,{method:'PATCH',body:JSON.stringify({active:!product.active})}),'Product updated.')));
     if (!product.active) actions.append(button('Delete draft',() => { if (window.confirm('Permanently delete the draft "'+product.name+'" and its sizes? This cannot be undone.')) save(actions,actionMessage,() => api('products/'+product.id,{method:'DELETE'}),'Draft deleted.'); }));
     const form = node('form'); form.className = 'product-editor'; form.hidden = true;
