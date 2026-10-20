@@ -17,7 +17,7 @@ function notify(message) { status.textContent = message; }
 async function api(path, options = {}) {
   const response = await fetch('/api/admin/' + path, {credentials:'same-origin', ...options, headers:{'content-type':'application/json', ...options.headers}});
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw Error(response.status === 403 ? 'Your dashboard session has expired. Sign in again in another tab, then retry. Your entries are still here.' : data.error || 'Request failed. Please try again.');
+  if (!response.ok) throw Error(response.status === 403 ? 'Dashboard access could not be verified. Sign in again in another tab, then retry. Your entries are still here.' : data.error || 'Request failed. Please try again.');
   return data;
 }
 function field(parent, title, element = node('input')) {
@@ -48,7 +48,7 @@ async function uploadPhoto(file) {
   const data = new FormData(); data.append('photo',file);
   const response = await fetch('/api/admin/images',{method:'POST',credentials:'same-origin',body:data});
   const result = await response.json().catch(() => ({}));
-  if (!response.ok) throw Error(response.status === 403 ? 'Your session has expired. Sign in again, then retry; your entries are still here.' : result.error || 'Photo upload failed.');
+  if (!response.ok) throw Error(response.status === 403 ? 'Dashboard access could not be verified. Sign in again, then retry; your entries are still here.' : result.error || 'Photo upload failed.');
   uploaded.set(file,result.url); return result.url;
 }
 function sizeEditor(parent, initial = []) {
