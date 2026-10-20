@@ -73,8 +73,11 @@ async function handler({request,env}){
   }
   if(request.method==='PATCH'&&section.startsWith('products/')){
    const id=section.slice(9);let v;try{v=await request.json();}catch{return fail('Invalid JSON');}
-   if(typeof v.active!=='boolean')return fail('Only publishing/unpublishing is supported here.');
-   const result=await env.DB.prepare('UPDATE products SET active=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(v.active?1:0,id).run();
+   const existing=await env.DB.prepare('SELECT * FROM products WHERE id=?').bind(id).first();if(!existing)return fail('Product not found',404);
+   const name=v.name===undefined?existing.name:String(v.name).trim();const description=v.description===undefined?existing.description:String(v.description).trim();const image=v.image_url===undefined?existing.image_url:String(v.image_url).trim();const price=v.price_cents===undefined?existing.price_cents:Number(v.price_cents);const active=typeof v.active==='boolean'?(v.active?1:0):existing.active;
+   if(!name||name.length>120||description.length>2000||!Number.isSafeInteger(price)||price<0||price>10000000)return fail('Check product name, description and price.');
+   if(image&&!(/^\/api\/images\/[0-9a-f-]{36}\.(jpg|png|webp)$/.test(image)||/^\/assets\/[a-zA-Z0-9._/-]+$/.test(image)||/^https:\/\/[a-zA-Z0-9.-]+\/[a-zA-Z0-9._/?=&%-]+$/.test(image)))return fail('Invalid image URL.');
+   const result=await env.DB.prepare('UPDATE products SET name=?,description=?,image_url=?,price_cents=?,active=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(name,description,image,price,active,id).run();
    return result.meta.changes?json({ok:true}):fail('Product not found',404);
   }
   if(request.method==='PATCH'&&section.startsWith('variants/')){
