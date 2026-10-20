@@ -81,6 +81,18 @@ async function handler({request,env}){
    await env.DB.prepare('INSERT INTO variants (id,product_id,label,sku,quantity) VALUES (?,?,?,?,?)').bind(id,product,label,sku,qty).run();
    return json({id},201);
   }
+  if(request.method==='DELETE'&&/^products\/[a-f0-9-]{36}$/.test(section)){
+   const id=section.slice(9);
+   const existing=await env.DB.prepare('SELECT id,active FROM products WHERE id=?').bind(id).first();
+   if(!existing)return fail('Product not found',404);
+   if(existing.active)return fail('Unpublish this product before deleting it.',409);
+   await env.DB.batch([
+    env.DB.prepare('DELETE FROM variants WHERE product_id=?').bind(id),
+    env.DB.prepare('DELETE FROM products WHERE id=? AND active=0').bind(id)
+   ]);
+   if(env.IMAGES){await env.IMAGES.delete('galleries/'+id+'.json');}
+   return json({ok:true});
+  }
   if(request.method==='PATCH'&&section.startsWith('products/')){
    const id=section.slice(9);let v;try{v=await request.json();}catch{return fail('Invalid JSON');}
    const existing=await env.DB.prepare('SELECT * FROM products WHERE id=?').bind(id).first();if(!existing)return fail('Product not found',404);
