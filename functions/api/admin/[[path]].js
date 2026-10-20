@@ -48,7 +48,7 @@ async function handler({request,env}){
   if(request.method==='GET'&&section==='products'){
    const products=(await env.DB.prepare('SELECT * FROM products ORDER BY created_at DESC').all()).results;
    const variants=(await env.DB.prepare('SELECT * FROM variants ORDER BY label').all()).results;const galleries={};if(env.IMAGES){await Promise.all(products.map(async p=>{const obj=await env.IMAGES.get('galleries/'+p.id+'.json');if(obj){try{galleries[p.id]=JSON.parse(await obj.text());}catch{}}}));}
-   return json({products:products.map(p=>({...p,images:Array.isArray(galleries[p.id]?.images)?galleries[p.id].images:(p.image_url?[p.image_url]:[]),color:galleries[p.id]?.color||'',variants:variants.filter(v=>v.product_id===p.id)}))});
+   return json({products:products.map(p=>({...p,images:Array.isArray(galleries[p.id]?.images)?galleries[p.id].images:(p.image_url?[p.image_url]:[]),color:galleries[p.id]?.color||'',style_group:galleries[p.id]?.style_group||'',variants:variants.filter(v=>v.product_id===p.id)}))});
   }
   if(request.method==='GET'&&section==='orders'){
    const orders=(await env.DB.prepare('SELECT id,status,customer_email,customer_name,total_cents,created_at FROM orders ORDER BY created_at DESC LIMIT 100').all()).results;
@@ -59,9 +59,9 @@ async function handler({request,env}){
    const id=section.split('/')[1];if(!await env.DB.prepare('SELECT id FROM products WHERE id=?').bind(id).first())return fail('Product not found.',404);
    let v;try{v=await request.json();}catch{return fail('Invalid JSON.');}
    const good=url=>typeof url==='string'&&(/^\/api\/images\/[a-f0-9-]{36}\.(jpg|png|webp)$/.test(url)||/^\/assets\/[a-zA-Z0-9._/-]+$/.test(url));
-   if(!Array.isArray(v.images)||v.images.length>12||v.images.some(url=>!good(url))||typeof v.color!=='string'||v.color.length>80)return fail('Invalid colour or photo list.');
-   const images=[...new Set(v.images)],color=v.color.trim();
-   await env.IMAGES.put('galleries/'+id+'.json',JSON.stringify({images,color}),{httpMetadata:{contentType:'application/json'}});
+   if(!Array.isArray(v.images)||v.images.length>12||v.images.some(url=>!good(url))||typeof v.color!=='string'||v.color.length>80||typeof v.style_group!=='string'||v.style_group.length>80)return fail('Invalid colour or photo list.');
+   const images=[...new Set(v.images)],color=v.color.trim(),style_group=v.style_group.trim();
+   await env.IMAGES.put('galleries/'+id+'.json',JSON.stringify({images,color,style_group}),{httpMetadata:{contentType:'application/json'}});
    await env.DB.prepare('UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(images[0]||'',id).run();return json({ok:true});
   }
   if(request.method==='POST'&&section==='products'){
