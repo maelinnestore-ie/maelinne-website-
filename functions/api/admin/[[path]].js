@@ -27,6 +27,24 @@ async function handler({request,env}){
  if(!env.DB)return fail('D1 database is not configured.',503);
  const url=new URL(request.url),section=url.pathname.replace(/^\/api\/admin\/?/,'').replace(/\/$/,'');
  try{
+  if(request.method==='POST'&&section==='images'){
+   if(!env.IMAGES)return fail('Image storage is not configured.',503);
+   const max=5*1024*1024;
+   if(Number(request.headers.get('content-length')||0)>max+65536)return fail('Photo must be smaller than 5 MB.',413);
+   let form;try{form=await request.formData();}catch{return fail('Invalid photo upload.');}
+   const photo=form.get('photo');
+   if(!photo||typeof photo.arrayBuffer!=='function'||photo.size<1||photo.size>max)return fail('Please choose an image smaller than 5 MB.');
+   const types={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+   const ext=types[photo.type];if(!ext)return fail('Use a JPG, PNG or WebP image.');
+   const data=new Uint8Array(await photo.arrayBuffer());
+   const jpeg=data[0]===255&&data[1]===216&&data[2]===255;
+   const png=data.length>8&&[137,80,78,71,13,10,26,10].every((n,i)=>data[i]===n);
+   const webp=data.length>12&&new TextDecoder().decode(data.slice(0,4))==='RIFF'&&new TextDecoder().decode(data.slice(8,12))==='WEBP';
+   if(!(ext==='jpg'&&jpeg||ext==='png'&&png||ext==='webp'&&webp))return fail('The selected file is not a valid image.');
+   const key=crypto.randomUUID()+'.'+ext;
+   await env.IMAGES.put(key,data,{httpMetadata:{contentType:photo.type},customMetadata:{source:'maelinne-admin'}});
+   return json({url:'/api/images/'+key},201);
+  }
   if(request.method==='GET'&&section==='products'){
    const products=(await env.DB.prepare('SELECT * FROM products ORDER BY created_at DESC').all()).results;
    const variants=(await env.DB.prepare('SELECT * FROM variants ORDER BY label').all()).results;
@@ -40,7 +58,7 @@ async function handler({request,env}){
    let v;try{v=await request.json();}catch{return fail('Invalid JSON');}
    const name=String(v.name||'').trim(),description=String(v.description||'').trim(),image=String(v.image_url||'').trim(),price=Number(v.price_cents),active=v.active===true?1:0;
    if(!name||name.length>120||description.length>2000||!Number.isSafeInteger(price)||price<0||price>10000000)return fail('Check name, description and price.');
-   if(image&&!(/^\/assets\/[a-zA-Z0-9._/-]+$/.test(image)||/^https:\/\/[a-zA-Z0-9.-]+\/[a-zA-Z0-9._/?=&%-]+$/.test(image)))return fail('Image must be an HTTPS URL or an assets/ path.');
+   if(image&&!(/^\/api\/images\/[0-9a-f-]{36}\.(jpg|png|webp)$/.test(image)||/^\/assets\/[a-zA-Z0-9._/-]+$/.test(image)||/^https:\/\/[a-zA-Z0-9.-]+\/[a-zA-Z0-9._/?=&%-]+$/.test(image)))return fail('Image must be an HTTPS URL or an assets/ path.');
    const id=crypto.randomUUID();
    await env.DB.prepare('INSERT INTO products (id,name,description,image_url,price_cents,active) VALUES (?,?,?,?,?,?)').bind(id,name,description,image,price,active).run();
    return json({id},201);
