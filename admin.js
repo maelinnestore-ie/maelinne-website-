@@ -19,7 +19,7 @@ function priceInCents(value) {
 
 let allProducts = [], busy = false;
 const hasUnsavedChanges = () => !!document.querySelector('form[data-dirty="true"]');
-function markDirty(element) { const form = element.closest("form"); if (form) form.dataset.dirty = "true"; }
+function markDirty(element) { const form = element.closest("form"); if (form) { form.dataset.dirty = "true"; element.dataset.dirty = "true"; } }
 const uploaded = new WeakMap();
 function notify(message) { status.textContent = message; }
 async function api(path, options = {}) {
@@ -184,6 +184,25 @@ function renderProducts() {
     const description = field(form,'Description',node('textarea')); description.maxLength = 2000; description.value = product.description || '';
     const style = field(form,'Style group (links other colours)'); style.maxLength = 80; style.value = product.style_group || '';
     const price = field(form,'Price (€)'); price.type = 'text'; price.inputMode = 'decimal'; price.autocomplete = 'off'; price.pattern = '[0-9]+([.,][0-9]{1,2})?'; price.title = 'Use 16.99 or 16,99'; price.maxLength = 12; price.required = true; price.value = (product.price_cents/100).toFixed(2);
+    const priceTools = node('div'); priceTools.className = 'price-tools'; form.append(priceTools);
+    const priceMessage = feedback(priceTools);
+    priceTools.prepend(button('Save price',async () => {
+      if (busy) return;
+      let cents;
+      try { cents = priceInCents(price.value); }
+      catch (error) { priceMessage.textContent = error.message; priceMessage.classList.add('error'); priceMessage.focus(); return; }
+      price.disabled = true;
+      await save(priceTools,priceMessage,async () => {
+        await api('products/'+product.id,{method:'PATCH',body:JSON.stringify({price_cents:cents})});
+        const latest = (await api('products')).products.find(item => item.id === product.id);
+        if (!latest || latest.price_cents !== cents) throw Error('The saved price could not be confirmed. Please retry.');
+        price.value = (cents/100).toFixed(2); price.dataset.dirty = 'false';
+        form.dataset.dirty = String(!!form.querySelector('[data-dirty="true"]'));
+        summary.querySelector('h3').textContent = latest.name + (latest.color ? ' — '+latest.color : '') + ' · ' + euros(cents);
+      },'Price saved: '+euros(cents));
+      price.disabled = false;
+    },false));
+
     const editor = colourEditor(form,product);
     const submit = node('button','Save product, sizes & stock'); submit.type = 'submit'; form.append(submit); const message = feedback(form);
     form.onsubmit = event => { event.preventDefault(); save(form,message,async () => {
