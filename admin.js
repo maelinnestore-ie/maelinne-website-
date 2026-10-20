@@ -24,6 +24,7 @@ function renderProducts(){
   const publish=node('button',product.active?'Unpublish':'Publish');publish.className='secondary';
   publish.onclick=()=>run(async()=>{await api('products/'+product.id,{method:'PATCH',body:JSON.stringify({active:!product.active})});await load();},'Product updated.');
   details.append(node('p',product.description||'No description'),publish);
+  if(!product.active){const remove=node('button','Delete draft');remove.type='button';remove.className='secondary';remove.style.cssText='color:#992e40;border-color:#992e40;margin-left:10px';remove.onclick=()=>{if(!window.confirm('Permanently delete the draft "'+product.name+'" and its sizes? This cannot be undone.'))return;run(async()=>{await api('products/'+product.id,{method:'DELETE'});await load();},'Draft deleted.');};details.append(remove);}
   const edit=node('button','Edit product');edit.className='secondary';edit.type='button';details.append(edit);
   const editForm=node('form');editForm.hidden=true;editForm.style.marginTop='1rem';
   const addField=(title,element)=>{const label=node('label',title);label.append(element);editForm.append(label);return element;};
