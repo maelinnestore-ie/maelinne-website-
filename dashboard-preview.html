@@ -5,6 +5,7 @@
 .catalogue-tools{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin:20px 0 28px}select{font:inherit;padding:12px;border:1px solid #bca9a5;border-radius:4px;background:white;width:100%}.product details{border-bottom:1px solid #e2d3c7;padding:5px 0 15px}.product summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.product summary h3{margin:0;font-size:1.12rem}.product details[open]>summary{margin-bottom:20px}.product{padding:10px 0;border-top:0}@media(max-width:650px){.catalogue-tools{grid-template-columns:1fr}}
 /* One save for colour details, size rows and stock. */
 form{max-width:850px}fieldset{min-width:0}.colour-editor{border:1px solid #d8c6b8;padding:20px;margin:12px 0 20px;border-radius:6px;display:grid;gap:14px;background:#fbf4ec}.colour-editor legend{font-weight:700;padding:0 8px}.colour-editor p,.size-editor p{font-size:.85rem;line-height:1.5;color:#736569;margin:0}.size-editor h4{margin:8px 0;font-size:1rem}.size-shortcuts{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}.size-shortcuts button{padding:8px 12px;font-size:.85rem}.size-table{border-collapse:collapse;width:100%;margin:12px 0}.size-table th{text-align:left;font-size:.8rem}.size-table td,.size-table th{padding:8px 5px;border-bottom:1px solid #e2d3c7;vertical-align:middle}.size-table input{min-width:60px;max-width:130px;padding:10px}.size-table td span{font-size:.75rem;color:#736569}.size-table td button{font-size:.75rem;padding:8px}.size-table .sku-column{display:none}.size-table.show-skus .sku-column{display:table-cell}.inline-check{display:flex;align-items:center;justify-content:flex-start;font-size:.8rem}.inline-check input{width:auto;order:-1}.form-message{margin:0;font-weight:600;font-size:.9rem;line-height:1.5}.form-message:empty{display:none}.form-message.error{color:#9a2439;background:#fff0f1;border:1px solid #e4a7b3;padding:12px;border-radius:4px}.selected-photos{display:flex;gap:10px;flex-wrap:wrap}.selected-photos img{width:100px;height:130px;object-fit:contain}.photo-tile{align-content:start}.photo-tile span{font-size:.75rem;text-align:center}.product-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.product-editor{padding:20px 0}.notice{overflow-wrap:anywhere}button:disabled{cursor:wait}.size-table-wrap{overflow-x:auto}[hidden]{display:none!important}@media(max-width:650px){section{padding:18px}.colour-editor{padding:12px}.wrap{padding:24px 14px 60px}.size-table td,.size-table th{padding:8px 3px}.size-table input{max-width:88px}.size-table.show-skus{min-width:460px}}
+.selected-photos .photo-tile img{width:100%;height:165px}.selected-photos .photo-tile span{overflow-wrap:anywhere}
 </style></head><body><main class="wrap"><header><div><p class="eyebrow">MAELINNE / PRIVATE WORKSPACE</p><h1>Shop dashboard</h1><p>Manage products, sizes, stock and orders.</p></div><a href="/">← View website</a></header><div class="notice" role="status" id="status">Connecting securely…</div><section><h2>Add new product</h2><form id="product-form"><label>Category<select name="category" required><option value="">Choose category</option><option>Tops</option><option>Knitwear</option><option>Bottoms</option><option>Dresses & Skirts</option><option>Sets</option><option>Outerwear</option><option>Sleepwear</option><option>Accessories</option><option>Other</option></select></label><label>Name<input name="name" required maxlength="120" placeholder="e.g. Y2K Lace Henley"></label><label>Style group (optional — defaults to the product name)<input name="style_group" maxlength="80" placeholder="e.g. Hammond"></label><label>Material<input name="fabric" maxlength="160" placeholder="e.g. 60% cotton, 35% rayon, 5% elastane"></label><label>Description<textarea name="description" maxlength="2000"></textarea></label><label>Price (€)<input name="price" type="number" min="0" step=".01" required></label><h3>Colours, sizes & stock</h3><p class="hint">Add each colour and its photos, choose sizes, and enter stock. Save everything together. Each colour stays as its own linked listing so its photos and stock are easy to manage.</p><div id="new-colours"></div><button type="button" class="secondary" id="add-colour">+ Add another colour</button><button type="submit">Save all colours & sizes as drafts</button><p id="create-message" class="form-message" role="status" tabindex="-1"></p></form></section><section aria-labelledby="products-title"><h2 id="products-title">Products</h2><div class="hint" id="product-count"></div><div class="catalogue-tools"><label>Search<input id="product-search" type="search" placeholder="Search name, colour or SKU"></label><label>Category<select id="category-filter"><option value="">All categories</option><option>Tops</option><option>Knitwear</option><option>Bottoms</option><option>Dresses & Skirts</option><option>Sets</option><option>Outerwear</option><option>Sleepwear</option><option>Accessories</option><option>Other</option><option>Uncategorised</option></select></label><label>Status<select id="status-filter"><option value="">All</option><option value="draft">Drafts</option><option value="published">Published</option></select></label></div><div id="draft-products"></div><div id="published-products"></div></section><section aria-labelledby="orders-title"><h2 id="orders-title">Orders</h2><p class="hint">Orders appear once payments are integrated; checkout is not yet available.</p><div id="orders"></div></section></main><script type="module">// Private admin API. Fails closed until D1 and Cloudflare Access are configured.
 // Authentication: verified Cloudflare Access RS256 JWT from Cf-Access-Jwt-Assertion.
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -250,7 +251,7 @@ function notify(message) { status.textContent = message; }
 async function api(path, options = {}) {
   const response = await fetch('/api/admin/' + path, {credentials:'same-origin', ...options, headers:{'content-type':'application/json', ...options.headers}});
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw Error(response.status === 403 ? 'Your dashboard session has expired. Sign in again in another tab, then retry. Your entries are still here.' : data.error || 'Request failed. Please try again.');
+  if (!response.ok) throw Error(response.status === 403 ? 'Dashboard access could not be verified. Sign in again in another tab, then retry. Your entries are still here.' : data.error || 'Request failed. Please try again.');
   return data;
 }
 function field(parent, title, element = node('input')) {
@@ -281,7 +282,7 @@ async function uploadPhoto(file) {
   const data = new FormData(); data.append('photo',file);
   const response = await fetch('/api/admin/images',{method:'POST',credentials:'same-origin',body:data});
   const result = await response.json().catch(() => ({}));
-  if (!response.ok) throw Error(response.status === 403 ? 'Your session has expired. Sign in again, then retry; your entries are still here.' : result.error || 'Photo upload failed.');
+  if (!response.ok) throw Error(response.status === 403 ? 'Dashboard access could not be verified. Sign in again, then retry; your entries are still here.' : result.error || 'Photo upload failed.');
   uploaded.set(file,result.url); return result.url;
 }
 function sizeEditor(parent, initial = []) {
@@ -322,7 +323,7 @@ function colourEditor(parent, initial = {}, removable = false) {
     gallery.replaceChildren();
     photos.forEach((url,index) => {
       const tile = node('div'); tile.className = 'photo-tile'; const image = node('img'); image.src = url; image.alt = 'Product photo ' + (index+1); tile.append(image);
-      tile.append(button('Remove photo', () => { photos.splice(index,1); drawPhotos(); markDirty(group); }));
+      tile.append(button('Remove photo', () => { photos.splice(index,1); drawPhotos(); drawPending(); markDirty(group); }));
       if (index) tile.append(button('Make cover', () => { photos.splice(index,1); photos.unshift(url); drawPhotos(); markDirty(group); },false));
       else tile.append(node('span','Cover photo'));
       gallery.append(tile);
@@ -330,18 +331,43 @@ function colourEditor(parent, initial = {}, removable = false) {
   }
   drawPhotos();
   const files = field(group,'Add photos for this colour (up to 12)',node('input')); files.type = 'file'; files.multiple = true; files.accept = 'image/jpeg,image/png,image/webp';
-  const previews = node('div'); previews.className = 'selected-photos'; group.append(previews);
-  files.onchange = () => {
+  group.append(node('p','Choose several photos together, or open the picker again to add more. On a Mac, hold Command while clicking photos.'));
+  const pending = [], previews = node('div'); previews.className = 'selected-photos gallery-editor'; group.append(previews);
+  const photoCount = node('p'); photoCount.setAttribute('role','status'); group.append(photoCount);
+  const photoError = feedback(group);
+  function drawPending() {
     previews.replaceChildren();
-    for (const file of files.files) { const image = node('img'); image.alt = 'Selected photo: ' + file.name; image.src = URL.createObjectURL(file); image.onload = () => URL.revokeObjectURL(image.src); previews.append(image); }
+    for (const file of pending) {
+      const tile = node('div'); tile.className = 'photo-tile';
+      const image = node('img'); image.alt = 'Selected photo: ' + file.name;
+      const url = URL.createObjectURL(file); image.src = url; image.onload = image.onerror = () => URL.revokeObjectURL(url);
+      tile.append(image, node('span',file.name), button('Remove selected photo', () => {
+        pending.splice(pending.indexOf(file),1); drawPending(); markDirty(group);
+      }));
+      previews.append(tile);
+    }
+    photoCount.textContent = photos.length + pending.length + ' of 12 photos' + (pending.length ? ' · ' + pending.length + ' ready to upload when you save' : '');
+  }
+  files.onchange = () => {
+    const selected = [...files.files];
+    const added = selected.filter(file => !pending.some(p => p.name === file.name && p.size === file.size && p.lastModified === file.lastModified));
+    const invalid = added.find(file => !['image/jpeg','image/png','image/webp'].includes(file.type) || !file.size || file.size > 5*1024*1024);
+    let error = '';
+    if (invalid) error = invalid.name + ': choose JPG, PNG or WebP photos smaller than 5 MB.';
+    else if (photos.length + pending.length + added.length > 12) error = 'That selection would exceed 12 photos. Remove a photo or choose fewer files; your previous selections are still here.';
+    else { pending.push(...added); if (added.length) markDirty(group); }
+    photoError.textContent = error; photoError.classList.toggle('error',!!error);
+    files.value = ''; // A fresh selection appends to the queue, including after cancelling the picker.
+    drawPending();
   };
+  drawPending();
   group.append(node('p','JPG, PNG or WebP; up to 5 MB each. Use photos of this colour.'));
   const getSizes = sizeEditor(group,initial.variants || []);
   if (removable) group.append(button('Remove this colour', () => { markDirty(group); group.remove(); }));
   return {group, async read() {
-    if (photos.length + files.files.length > 12) throw Error('Use no more than 12 photos per colour.');
+    if (photos.length + pending.length > 12) throw Error('Use no more than 12 photos per colour.');
     const images = [...photos];
-    for (const file of files.files) images.push(await uploadPhoto(file));
+    for (const file of pending) images.push(await uploadPhoto(file));
     return {color:colour.value.trim(), images, variants:getSizes()};
   }};
 }
