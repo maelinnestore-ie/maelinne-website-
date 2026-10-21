@@ -2,19 +2,18 @@ export const reply=(body,status=200)=>Response.json(body,{status,headers:{'cache
 export const database=env=>env.DB.withSession?env.DB.withSession('first-primary'):env.DB;
 export function configurationChecks(env){
  const mode=env.CHECKOUT_MODE;
- const prefix=mode==='test'?'sk_test_':mode==='live'?'sk_live_':null;
+ const key=env.STRIPE_SECRET_KEY;
+ const keyValid=typeof key==='string'&&(mode==='test'?/^[sr]k_test_.+/.test(key):mode==='live'?/^[sr]k_live_.+/.test(key):false);
  return {
   database_bound:!!env.DB,
   checkout_mode_valid:mode==='test'||mode==='live',
-  stripe_secret_key_format:!!(prefix&&typeof env.STRIPE_SECRET_KEY==='string'&&env.STRIPE_SECRET_KEY.startsWith(prefix)),
+  stripe_secret_key_format:keyValid,
   webhook_secret_format:!!(typeof env.STRIPE_WEBHOOK_SECRET==='string'&&env.STRIPE_WEBHOOK_SECRET.startsWith('whsec_')),
   live_approval_valid:mode!=='live'||env.CHECKOUT_LIVE_APPROVED==='true'
  };
 }
 export function configuration(env){
- const mode=env.CHECKOUT_MODE;
- const expected=mode==='test'?'sk_test_':mode==='live'&&env.CHECKOUT_LIVE_APPROVED==='true'?'sk_live_':null;
- return !!(env.DB&&expected&&env.STRIPE_SECRET_KEY?.startsWith(expected)&&env.STRIPE_WEBHOOK_SECRET?.startsWith('whsec_'));
+ return Object.values(configurationChecks(env)).every(value=>value===true);
 }
 export function basketItems(items){
  if(!Array.isArray(items)||!items.length||items.length>20)throw Error('Add between one and twenty sizes to your bag.');
