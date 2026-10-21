@@ -59,7 +59,15 @@ export async function stripe(env,path,body,key){
  const posting=body!==undefined&&body!==null;
  const response=await fetch('https://api.stripe.com/v1/'+path,{method:posting?'POST':'GET',signal:AbortSignal.timeout(15000),headers:{Authorization:'Bearer '+env.STRIPE_SECRET_KEY,...(posting?{'content-type':'application/x-www-form-urlencoded'}:{}),...(key?{'Idempotency-Key':key}:{})},...(posting?{body}:{})});
  const result=await response.json();
- if(!response.ok){const error=Error('Payment provider could not complete this request. Please retry.');error.definitive=response.status>=400&&response.status<500&&![409,429].includes(response.status);throw error;}
+ if(!response.ok){
+  const safe=value=>typeof value==='string'&&/^[a-zA-Z0-9_\[\].-]{1,120}$/.test(value)?value:'';
+  const code=safe(result.error?.code),parameter=safe(result.error?.param);
+  let message='Stripe could not open checkout. Please retry.';
+  if(response.status===401)message='Stripe rejected the test secret key. Check the full secret key saved in Cloudflare Preview.';
+  else if(response.status===403)message='The Stripe key does not have permission to create this checkout.';
+  else if(response.status===400)message='Stripe rejected the checkout settings'+(parameter?' (parameter: '+parameter+')':'')+(code?' ['+code+']':'')+'.';
+  const error=Error(message);error.definitive=response.status>=400&&response.status<500&&![409,429].includes(response.status);error.restartCheckout=error.definitive;throw error;
+ }
  return result;
 }
 export function sessionParameters(order,lines,origin){

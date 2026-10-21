@@ -44,9 +44,9 @@ class TextEncoder{encode(s){return Uint8Array.from(unescape(encodeURIComponent(s
 let uuid=100;const crypto={randomUUID:()=> '00000000-0000-4000-8000-'+String(++uuid).padStart(12,'0'),subtle:{async importKey(type,key){return Array.from(key)},async verify(alg,key,signature,message){return py({action:'verify',key,signature:Array.from(signature),message:Array.from(message)})}}};
 const AbortSignal={timeout:()=>undefined};
 const DB={prepare(sql){const q={sql,args:[],bind(...args){this.args=args;return this},async all(){return py({action:'sql',sql:this.sql,args:this.args})},async first(){return (await this.all()).results[0]||null},async run(){return this.all()}};return q},async batch(queries){return py({action:'batch',queries:queries.map(q=>({sql:q.sql,args:q.args}))})}};
-const provider=new Map(),idem=new Map();let stripeCalls=0,failOnce=false;
+const provider=new Map(),idem=new Map();let stripeCalls=0,failOnce=false,providerError=null;
 async function fetch(url,options={}){
- stripeCalls++;const path=url.replace('https://api.stripe.com/v1/','');let session;
+ stripeCalls++;if(providerError){const error=providerError;providerError=null;return {ok:false,status:400,async json(){return {error}}}}const path=url.replace('https://api.stripe.com/v1/','');let session;
  if(path==='checkout/sessions'){
   if(idem.has(options.headers['Idempotency-Key']))session=idem.get(options.headers['Idempotency-Key']);
   else{const a=new URLSearchParams(options.body),id='cs_test_'+String(provider.size+1);let total=Number(a.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]'));
@@ -107,6 +107,14 @@ const v='11111111-1111-4111-8111-111111111111',v2='22222222-2222-4222-8222-22222
  secondPaid.status='expired';await settle(DB,env,secondPaid);assert((await sql('SELECT quantity FROM variants WHERE id=?',[v])).results[0].quantity===2&&(await sql('SELECT * FROM checkout_holds')).results.length===0,'abandoned checkout restores availability without restocking sold units');
  let rolledBack=false;try{await DB.batch([DB.prepare("INSERT INTO orders(id,status,total_cents) VALUES (?,'pending',100)").bind('rollback-order'),DB.prepare('INSERT INTO checkout_holds(order_id,variant_id,quantity,unit_price_cents) VALUES (?,?,?,?)').bind('rollback-order',v,3,1699)])}catch{rolledBack=true}
  assert(rolledBack&&!(await DB.prepare('SELECT * FROM orders WHERE id=?').bind('rollback-order').first()),'reservation trigger rolls back the entire order transaction');
+
+ providerError={code:'parameter_invalid_integer',param:'expires_at',message:'Do not return this raw message: sk_test_example'};
+ const rejectedKey='88888888-8888-4888-8888-888888888888';const refused=await request('start',{items:[{variant_id:v,quantity:1}],code:'WELCOME10',checkout_key:rejectedKey});
+ assert(refused.status===400&&refused.body.restart_checkout===true,'definitive rejection tells browser to discard failed checkout');
+ assert(refused.body.error.includes('expires_at')&&!JSON.stringify(refused).includes('sk_test_example'),'safe Stripe parameter error contains no raw message or key');
+ assert((await sql('SELECT * FROM checkout_holds')).results.length===0,'definitive rejection releases reservation');
+ const restarted=await request('start',{items:[{variant_id:v,quantity:1}],code:'WELCOME10',checkout_key:'99999999-9999-4999-8999-999999999999'});
+ assert(restarted.status===200,'new checkout succeeds after rejection');
  result=JSON.stringify({passed,failed:0});
 })().catch(error=>result='FAIL: '+error.message+' | '+error.stack);
 '''

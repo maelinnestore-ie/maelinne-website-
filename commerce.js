@@ -6,7 +6,7 @@
  function updateCounts(){const count=read().reduce((n,row)=>n+row.quantity,0);document.querySelectorAll('[data-bag-count]').forEach(el=>el.textContent=count?' ('+count+')':'');}
  document.querySelectorAll('.desktop-nav').forEach(nav=>{const link=element('a');link.href='/bag.html';link.className='bag-link';link.append(element('span','Bag'));const count=element('span');count.dataset.bagCount='';link.append(count);nav.append(link);});
  updateCounts();window.addEventListener('storage',updateCounts);
- async function api(path,body){const response=await fetch('/api/checkout/'+path,{cache:'no-store',...(body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{})});const result=await response.json();if(!response.ok)throw Error(result.error||'Could not connect. Please retry.');return result;}
+ async function api(path,body){const response=await fetch('/api/checkout/'+path,{cache:'no-store',...(body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{})});const result=await response.json();if(!response.ok){const error=Error(result.error||'Could not connect. Please retry.');error.restartCheckout=result.restart_checkout===true;throw error;}return result;}
  async function purchase(){
   const holder=document.getElementById('purchase-controls');if(!holder)return;
   try{
@@ -67,7 +67,7 @@
    }
    try{sessionStorage.setItem('maelinne-checkout',JSON.stringify({key:attemptKey,snapshot}));}catch{}
    try{const result=await api('start',{items,code,checkout_key:attemptKey});if(!result.url?.startsWith('https://checkout.stripe.com/'))throw Error('Checkout could not be verified.');try{sessionStorage.setItem('maelinne-checkout',JSON.stringify({key:attemptKey,snapshot,session_id:result.session_id}));}catch{}location.assign(result.url);}
-   catch(error){say(error.message,true);if(/expired|already paid/.test(error.message)){attemptKey=null;attemptSnapshot=null;try{sessionStorage.removeItem('maelinne-checkout');}catch{}}busy=false;controls.forEach(el=>el.disabled=false);checkout.disabled=!latest;}
+   catch(error){say(error.message,true);if(error.restartCheckout||/expired|already paid/.test(error.message)){attemptKey=null;attemptSnapshot=null;try{sessionStorage.removeItem('maelinne-checkout');}catch{}}busy=false;controls.forEach(el=>el.disabled=false);checkout.disabled=!latest;}
   };
   draw();await refresh();
  }

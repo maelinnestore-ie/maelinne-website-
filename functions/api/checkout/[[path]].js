@@ -53,6 +53,6 @@ export async function onRequest({request,env,params}){
   const message=String(error.message||error);
   if(/no such|has no column/i.test(message))return reply({error:'Checkout is being prepared. Your bag is saved.'},503);
   if(message.includes('STOCK_UNAVAILABLE'))return reply({error:'Stock changed while checking out. Please refresh your bag.'},409);
-  return reply({error:message.includes('UNIQUE')?'Checkout is already starting. Please retry.':message},400);
+  return reply({error:message.includes('UNIQUE')?'Checkout is already starting. Please retry.':message,restart_checkout:error.restartCheckout===true},400);
  }
 }
