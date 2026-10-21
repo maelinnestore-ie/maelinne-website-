@@ -51,8 +51,18 @@ async function handler({request,env}){
    return json({products:products.map(p=>({...p,images:Array.isArray(galleries[p.id]?.images)?galleries[p.id].images:(p.image_url?[p.image_url]:[]),color:galleries[p.id]?.color||'',style_group:galleries[p.id]?.style_group||'',category:galleries[p.id]?.category||'Uncategorised',fabric:galleries[p.id]?.fabric||'',variants:variants.filter(v=>v.product_id===p.id)}))});
   }
   if(request.method==='GET'&&section==='orders'){
-   const orders=(await env.DB.prepare('SELECT id,status,customer_email,customer_name,total_cents,created_at FROM orders ORDER BY created_at DESC LIMIT 100').all()).results;
+   let orders;
+   try{orders=(await env.DB.prepare("SELECT id,status,customer_email,customer_name,total_cents,created_at,test_mode,promo_code,subtotal_cents,discount_cents,shipping_cents FROM orders WHERE status IN ('paid','shipped','refunded') ORDER BY created_at DESC LIMIT 100").all()).results;}
+   catch(error){if(!String(error).includes('no such column'))throw error;orders=(await env.DB.prepare('SELECT id,status,customer_email,customer_name,total_cents,created_at FROM orders ORDER BY created_at DESC LIMIT 100').all()).results;}
+
    return json({orders});
+  }
+  if(request.method==='GET'&&/^orders\/[a-f0-9-]{36}$/.test(section)){
+   const id=section.split('/')[1];
+   const order=await env.DB.prepare('SELECT id,status,customer_name,customer_email,shipping_address,total_cents FROM orders WHERE id=?').bind(id).first();
+   if(!order)return fail('Order not found.',404);
+   const items=(await env.DB.prepare('SELECT i.quantity,i.unit_price_cents,v.label,v.sku,p.name FROM order_items i JOIN variants v ON v.id=i.variant_id JOIN products p ON p.id=v.product_id WHERE i.order_id=?').bind(id).all()).results;
+   return json({order,items});
   }
   if(request.method==='PUT'&&/^products\/[a-f0-9-]{36}\/gallery$/.test(section)){
    if(!env.IMAGES)return fail('Image storage unavailable.',503);
@@ -198,6 +208,6 @@ async function handler({request,env}){
    return result.meta.changes?json({ok:true}):fail('Variant not found',404);
   }
   return fail('Not found',404);
- }catch(e){console.error('Admin API failure',e);return fail('Unable to complete request. Check database setup or duplicate SKU.',500);}
+ }catch(e){if(String(e).includes('STOCK_RESERVED'))return fail('Some stock is reserved in an active checkout. Wait for it to finish or expire before reducing this quantity.',409);console.error('Admin API failure',e);return fail('Unable to complete request. Check database setup or duplicate SKU.',500);}
 }
 export const onRequest=handler;

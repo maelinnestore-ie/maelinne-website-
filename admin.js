@@ -271,5 +271,10 @@ document.addEventListener('input',event => markDirty(event.target));
 window.addEventListener('beforeunload',event => { if (hasUnsavedChanges() || busy) { event.preventDefault(); event.returnValue = ''; } });
 (async () => {
   try { await loadProducts(); notify('Dashboard connected.'); } catch (error) { notify(error.message); }
-  try { const {orders} = await api('orders'); ordersEl.replaceChildren(); if (!orders.length) ordersEl.append(node('p','No orders yet.')); for (const order of orders) { const el = node('div'); el.className = 'order'; el.append(node('strong',order.id+' — '+order.status),node('p',order.customer_email+' · '+euros(order.total_cents)+' · '+order.created_at)); ordersEl.append(el); } } catch { ordersEl.textContent = 'Orders are temporarily unavailable.'; }
+  try { const {orders} = await api('orders'); ordersEl.replaceChildren(); if (!orders.length) ordersEl.append(node('p','No orders yet.')); for (const order of orders) { const el = node('div'); el.className = 'order'; el.append(node('strong',(order.test_mode?'TEST · ':'')+order.id+' — '+order.status),node('p',order.customer_email+' · '+euros(order.total_cents)+' · '+order.created_at));
+      if(order.promo_code)el.append(node('p',order.promo_code+' · discount '+euros(order.discount_cents)+' · delivery '+euros(order.shipping_cents)));
+      if(order.test_mode)el.append(node('p','Test order — do not dispatch.'));
+      const details=node('details'),summary=node('summary','Items & delivery');details.append(summary);el.append(details);let loaded=false;
+      details.ontoggle=async()=>{if(!details.open||loaded)return;loaded=true;try{const result=await api('orders/'+order.id);for(const item of result.items)details.append(node('p',item.quantity+' × '+item.name+' · '+item.label+' · SKU '+item.sku));let address={};try{address=JSON.parse(result.order.shipping_address||'{}');}catch{}details.append(node('p',[result.order.customer_name,address.line1,address.line2,address.city,address.state,address.postal_code,address.country].filter(Boolean).join(', ')));}catch{loaded=false;details.append(node('p','Could not load order details. Close and reopen to retry.'));}};
+      ordersEl.append(el); } } catch { ordersEl.textContent = 'Orders are temporarily unavailable.'; }
 })();
