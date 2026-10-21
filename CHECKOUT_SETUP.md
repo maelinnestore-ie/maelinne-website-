@@ -1,6 +1,6 @@
 # Stripe checkout setup
 
-The checkout implementation is prepared for testing. It is not activated in production. A missing key, webhook secret, database migration or checkout mode keeps payments disabled.
+The checkout implementation has passed two real Stripe sandbox payments. It is not activated in production. A missing key, webhook secret, database migration or checkout mode keeps payments disabled.
 
 ## Agreed behaviour
 
@@ -45,3 +45,21 @@ Refunds are handled in Stripe for this version. The integration does not automat
 ## Local verification
 
 `python3 tests/test_checkout.py` from the repository directory exercises the actual JS checkout handlers, real SQLite schema/transactions and HMAC verification through a macOS JavaScriptCore test adapter. The adapter simulates Stripe and Web APIs; it never contacts Stripe or touches the live inventory.
+
+## Verified sandbox results — 21 October 2026
+
+- WELCOME10: two €24.99 items, €5 discount, free delivery, €44.98 paid in the sandbox. Medium stock reduced from 10 to 8.
+- VIP40: one €24.99 item, €10 discount, €5 delivery, €19.99 paid in the sandbox.
+- Both orders appeared in admin marked TEST. The owner confirmed successful webhook delivery after the Access exception was added.
+- Stripe requests pin API version `2026-09-30.endive` and use `allowed_payment_method_types[0]=card`, verified against the real sandbox.
+- The preview uses the isolated `maelinne-shop-test` D1 database. Production inventory is unchanged.
+
+The sandbox webhook remains at `https://6264b283.maelinne-website.pages.dev/api/stripe-webhook`. Cloudflare Access has a narrow bypass for that exact hostname/path so Stripe can reach it; all webhook requests still require a valid Stripe signature. Do not move this endpoint whenever a new preview deployment is created. Admin routes remain protected.
+
+### Remaining before release
+
+- Stripe identity verification and account activation; owner approval before live payments.
+- Customer receipt settings and an actual delivered receipt check.
+- Real browser mobile layout review and a cancelled checkout check. Browser automation was unavailable during the follow-up; automated checks are not visual QA.
+- Confirm dispatch timeframe and returns/contact business details before publishing customer policies. Do not invent a carrier, delivery promise or returns address.
+- Apply the production migration, configure the separate live webhook/secrets, publish the approved checkout change and replace the coming-soon copy as one planned release.

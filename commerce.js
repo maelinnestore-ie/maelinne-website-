@@ -4,7 +4,7 @@
  function read(){try{const data=JSON.parse(localStorage.getItem(storageKey)||'[]');return Array.isArray(data)?data.filter(r=>r&&typeof r.variant_id==='string'&&Number.isInteger(r.quantity)&&r.quantity>0&&r.quantity<=10).slice(0,20):[];}catch{return [];}}
  function write(items){try{localStorage.setItem(storageKey,JSON.stringify(items));}catch{throw Error('Your browser could not save the bag. Allow site storage and try again.');}updateCounts();}
  function updateCounts(){const count=read().reduce((n,row)=>n+row.quantity,0);document.querySelectorAll('[data-bag-count]').forEach(el=>el.textContent=count?' ('+count+')':'');}
- document.querySelectorAll('.desktop-nav').forEach(nav=>{const link=element('a');link.href='/bag.html';link.className='bag-link';link.append(element('span','Bag'));const count=element('span');count.dataset.bagCount='';link.append(count);nav.append(link);});
+ document.querySelectorAll('.desktop-nav,.mobile-nav').forEach(nav=>{if(nav.querySelector('.bag-link'))return;const link=element('a');link.href='/bag.html';link.className='bag-link';link.append(element('span','Bag'));const count=element('span');count.dataset.bagCount='';link.append(count);nav.append(link);});
  updateCounts();window.addEventListener('storage',updateCounts);
  async function api(path,body){const response=await fetch('/api/checkout/'+path,{cache:'no-store',...(body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{})});const result=await response.json();if(!response.ok){const error=Error(result.error||'Could not connect. Please retry.');error.restartCheckout=result.restart_checkout===true;throw error;}return result;}
  async function purchase(){
@@ -36,11 +36,13 @@
     else result.textContent=state.status==='expired'?'This checkout expired. Your bag is still saved.':'Your payment is still being confirmed. Please check back shortly; don’t pay again.';
    }catch{result.textContent='We couldn’t check your payment yet. Please refresh this page shortly; don’t pay again.';}return;
   }
-  try{config=await api('config');const r=await fetch('/api/products',{cache:'no-store'});if(!r.ok)throw Error('The collection is temporarily unavailable.');catalogue=(await r.json()).products;}catch(error){say(error.message,true);}
+  let cancellationNotice='';
+  try{config=await api('config');}catch(error){say(error.message,true);}
   if(config.enabled&&new URLSearchParams(location.search).has('cancelled')){
-   try{const pending=JSON.parse(sessionStorage.getItem('maelinne-checkout')||'null');if(pending){const result=await api('cancel',{checkout_key:pending.key});if(result.status==='paid'){location.replace('/bag.html?session_id='+encodeURIComponent(result.session_id));return;}if(result.status==='expired')sessionStorage.removeItem('maelinne-checkout');}}
+   try{const pending=JSON.parse(sessionStorage.getItem('maelinne-checkout')||'null');if(pending){try{code=JSON.parse(pending.snapshot).code||'';promo.value=code;}catch{}const result=await api('cancel',{checkout_key:pending.key});if(result.status==='paid'){location.replace('/bag.html?session_id='+encodeURIComponent(result.session_id));return;}if(result.status==='expired'){sessionStorage.removeItem('maelinne-checkout');cancellationNotice='Checkout cancelled. Your bag is saved and your items are available again.';}}}
    catch{say('Your previous checkout may still be holding stock. Please try again shortly.',true);}
   }
+  try{const r=await fetch('/api/products',{cache:'no-store'});if(!r.ok)throw Error('The collection is temporarily unavailable.');catalogue=(await r.json()).products;}catch(error){say(error.message,true);}
   document.getElementById('bag-test').hidden=!config.test_mode;
   function draw(){
    list.replaceChildren();latest=null;checkout.disabled=true;
@@ -69,7 +71,7 @@
    try{const result=await api('start',{items,code,checkout_key:attemptKey});if(!result.url?.startsWith('https://checkout.stripe.com/'))throw Error('Checkout could not be verified.');try{sessionStorage.setItem('maelinne-checkout',JSON.stringify({key:attemptKey,snapshot,session_id:result.session_id}));}catch{}location.assign(result.url);}
    catch(error){say(error.message,true);if(error.restartCheckout||/expired|already paid/.test(error.message)){attemptKey=null;attemptSnapshot=null;try{sessionStorage.removeItem('maelinne-checkout');}catch{}}busy=false;controls.forEach(el=>el.disabled=false);checkout.disabled=!latest;}
   };
-  draw();await refresh();
+  draw();await refresh();if(cancellationNotice&&latest)say(cancellationNotice+(latest.promo_code?' '+latest.promo_code+' is still applied.':''));
  }
  purchase();bagPage();
 })();
