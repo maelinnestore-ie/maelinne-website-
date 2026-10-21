@@ -1,5 +1,16 @@
 export const reply=(body,status=200)=>Response.json(body,{status,headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
 export const database=env=>env.DB.withSession?env.DB.withSession('first-primary'):env.DB;
+export function configurationChecks(env){
+ const mode=env.CHECKOUT_MODE;
+ const prefix=mode==='test'?'sk_test_':mode==='live'?'sk_live_':null;
+ return {
+  database_bound:!!env.DB,
+  checkout_mode_valid:mode==='test'||mode==='live',
+  stripe_secret_key_format:!!(prefix&&typeof env.STRIPE_SECRET_KEY==='string'&&env.STRIPE_SECRET_KEY.startsWith(prefix)),
+  webhook_secret_format:!!(typeof env.STRIPE_WEBHOOK_SECRET==='string'&&env.STRIPE_WEBHOOK_SECRET.startsWith('whsec_')),
+  live_approval_valid:mode!=='live'||env.CHECKOUT_LIVE_APPROVED==='true'
+ };
+}
 export function configuration(env){
  const mode=env.CHECKOUT_MODE;
  const expected=mode==='test'?'sk_test_':mode==='live'&&env.CHECKOUT_LIVE_APPROVED==='true'?'sk_live_':null;
