@@ -2,3 +2,5 @@
 
 .bag-item h2{overflow-wrap:anywhere}.bag-totals dd{white-space:nowrap}.bag-header .wordmark{min-width:0}
 @media(max-width:700px){.bag-header{height:auto;min-height:76px;gap:20px;padding:18px 16px;flex-wrap:wrap}.bag-header .wordmark{flex:0 1 150px}.bag-header .desktop-nav{display:flex;gap:18px;flex-wrap:wrap}.promo-controls{flex-wrap:wrap}.promo-controls input{flex:1 1 120px}.promo-controls button{flex:0 0 auto}}
+
+.bag-item{grid-template-columns:85px minmax(0,1fr) 104px}.bag-stepper{display:grid;grid-template-columns:28px minmax(0,1fr) 28px;align-items:stretch}.bag-stepper button{font:inherit;font-size:20px;border:1px solid #bda8a3;color:#521f2b;background:#fffaf4;cursor:pointer;padding:4px}.bag-stepper .bag-quantity{text-align:center;padding:8px 2px;border-left:0;border-right:0}.bag-stepper button:disabled{opacity:.5;cursor:not-allowed}@media(max-width:700px){.bag-item{grid-template-columns:65px minmax(0,1fr) 96px}}

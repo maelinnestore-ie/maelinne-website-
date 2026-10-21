@@ -15,12 +15,11 @@ let quotes=0;async function fetch(url,options){if(url==='/api/products')return {
 '''
 finish=r'''
 for(let i=0;i<10;i++)await Promise.resolve();
-const form=holder.children[0],size=form.children[0].children[0],qty=form.children[1].children[0],button=form.children[2],message=form.children[3];
-check(size.children[1].textContent==='S','size has no inventory count');check(qty.children.length===10&&qty.value==='1','quantity selector defaults to one');
-size.value='v';qty.value='2';const pending=form.onsubmit({preventDefault(){}});check(button.disabled,'double submit blocked while checking');await pending;
-check(bag[0].quantity===2,'selected quantity saved');check(message.children[0].textContent==='2 items added to your bag. ','quantity confirmation');
-qty.value='1';await form.onsubmit({preventDefault(){}});check(bag[0].quantity===2&&message.textContent==='Please choose fewer items.','stock rejection preserves existing bag');check(!button.disabled,'button restored after rejection');
-qty.value='10';await form.onsubmit({preventDefault(){}});check(bag[0].quantity===2&&quotes===2,'per size cap before server request');
+const form=holder.children[0],size=form.children[0].children[0],button=form.children[1],message=form.children[2];
+check(size.children[1].textContent==='S','size has no inventory count');check(form.children.length===3,'product page has size, button and message only');
+size.value='v';const pending=form.onsubmit({preventDefault(){}});check(button.disabled,'double submit blocked while checking');await pending;
+check(bag[0].quantity===1,'add to bag adds one');await form.onsubmit({preventDefault(){}});check(bag[0].quantity===2,'repeat add increments one');
+await form.onsubmit({preventDefault(){}});check(bag[0].quantity===2&&message.textContent==='Please choose fewer items.','stock rejection preserves existing bag');check(!button.disabled,'button restored after rejection');
 size.value='';await form.onsubmit({preventDefault(){}});check(message.textContent==='Choose a size.','size required');
 productResult=JSON.stringify({product_ui_passed:passed,failed:0});
 })().catch(e=>productResult=String(e.stack||e));
