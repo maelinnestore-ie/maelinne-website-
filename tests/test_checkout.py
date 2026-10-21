@@ -49,7 +49,11 @@ async function fetch(url,options={}){
  stripeCalls++;if(providerError){const error=providerError;providerError=null;return {ok:false,status:400,async json(){return {error}}}}const path=url.replace('https://api.stripe.com/v1/','');let session;
  if(path==='checkout/sessions'){
   if(idem.has(options.headers['Idempotency-Key']))session=idem.get(options.headers['Idempotency-Key']);
-  else{const a=new URLSearchParams(options.body),id='cs_test_'+String(provider.size+1);let total=Number(a.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]'));
+  else{const a=new URLSearchParams(options.body);
+   if(a.get('payment_method_types[0]'))return {ok:false,status:400,async json(){return {error:{param:'payment_method_types',type:'invalid_request_error'}}}};
+   if(a.get('allowed_payment_method_types[0]')!=='card')throw Error('Checkout must filter to immediate card payments');
+   if(options.headers['Stripe-Version']!=='2026-09-30.endive')throw Error('Stripe API version must be pinned');
+   const id='cs_test_'+String(provider.size+1);let total=Number(a.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]'));
    for(let i=0;a.get(`line_items[${i}][quantity]`);i++)total+=Number(a.get(`line_items[${i}][quantity]`))*Number(a.get(`line_items[${i}][price_data][unit_amount]`));
    session={id,url:'https://checkout.stripe.com/c/pay/'+id,status:'open',payment_status:'unpaid',amount_total:total,currency:'eur',livemode:false,metadata:{order_id:a.get('metadata[order_id]')},client_reference_id:a.get('client_reference_id'),payment_intent:'pi_'+id,customer_details:{email:'synthetic@example.test',name:'Test'},shipping_details:{name:'Test',address:{country:'IE',city:'Dublin'}}};provider.set(id,session);idem.set(options.headers['Idempotency-Key'],session);
   }

@@ -57,7 +57,7 @@ export function discountedUnits(lines,discount){
 }
 export async function stripe(env,path,body,key){
  const posting=body!==undefined&&body!==null;
- const response=await fetch('https://api.stripe.com/v1/'+path,{method:posting?'POST':'GET',signal:AbortSignal.timeout(15000),headers:{Authorization:'Bearer '+env.STRIPE_SECRET_KEY,...(posting?{'content-type':'application/x-www-form-urlencoded'}:{}),...(key?{'Idempotency-Key':key}:{})},...(posting?{body}:{})});
+ const response=await fetch('https://api.stripe.com/v1/'+path,{method:posting?'POST':'GET',signal:AbortSignal.timeout(15000),headers:{Authorization:'Bearer '+env.STRIPE_SECRET_KEY,'Stripe-Version':'2026-09-30.endive',...(posting?{'content-type':'application/x-www-form-urlencoded'}:{}),...(key?{'Idempotency-Key':key}:{})},...(posting?{body}:{})});
  const result=await response.json();
  if(!response.ok){
   const safe=value=>typeof value==='string'&&/^[a-zA-Z0-9_\[\].-]{1,120}$/.test(value)?value:'';
@@ -71,7 +71,7 @@ export async function stripe(env,path,body,key){
  return result;
 }
 export function sessionParameters(order,lines,origin){
- const params=new URLSearchParams({mode:'payment','payment_method_types[0]':'card',success_url:origin+'/bag.html?session_id={CHECKOUT_SESSION_ID}',cancel_url:origin+'/bag.html?cancelled=1',client_reference_id:order.id,'metadata[order_id]':order.id,'metadata[promo_code]':order.promo_code,expires_at:String(order.checkout_expires),'shipping_address_collection[allowed_countries][0]':'IE','shipping_options[0][shipping_rate_data][type]':'fixed_amount','shipping_options[0][shipping_rate_data][fixed_amount][amount]':String(order.shipping_cents),'shipping_options[0][shipping_rate_data][fixed_amount][currency]':'eur','shipping_options[0][shipping_rate_data][display_name]':order.shipping_cents?'Ireland delivery':'Free Ireland delivery'});
+ const params=new URLSearchParams({mode:'payment','allowed_payment_method_types[0]':'card',success_url:origin+'/bag.html?session_id={CHECKOUT_SESSION_ID}',cancel_url:origin+'/bag.html?cancelled=1',client_reference_id:order.id,'metadata[order_id]':order.id,'metadata[promo_code]':order.promo_code,expires_at:String(order.checkout_expires),'shipping_address_collection[allowed_countries][0]':'IE','shipping_options[0][shipping_rate_data][type]':'fixed_amount','shipping_options[0][shipping_rate_data][fixed_amount][amount]':String(order.shipping_cents),'shipping_options[0][shipping_rate_data][fixed_amount][currency]':'eur','shipping_options[0][shipping_rate_data][display_name]':order.shipping_cents?'Ireland delivery':'Free Ireland delivery'});
  discountedUnits(lines,order.discount_cents).forEach((line,i)=>{
   params.set(`line_items[${i}][price_data][currency]`,'eur');params.set(`line_items[${i}][price_data][unit_amount]`,String(line.amount));
   params.set(`line_items[${i}][price_data][product_data][name]`,line.name+(order.promo_code?' ('+order.promo_code+' applied)':''));params.set(`line_items[${i}][quantity]`,'1');
