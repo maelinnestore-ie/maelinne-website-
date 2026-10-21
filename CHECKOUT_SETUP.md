@@ -30,7 +30,7 @@ The checkout implementation has passed two real Stripe sandbox payments. It is n
 
 Complete a real Stripe sandbox end-to-end test and a browser layout review before merging. The automated harness uses simulated Stripe responses and a real SQLite database; it does not replace a Stripe sandbox payment.
 
-Apply migration 0002 once to the production D1 database and retain the existing admin Access protection. Configure a production Stripe webhook endpoint for `https://www.maelinne.ie/api/stripe-webhook`. Add encrypted **live** keys only to production, `CHECKOUT_MODE=live`, and `CHECKOUT_LIVE_APPROVED=true` only after the owner explicitly approves opening payments. Live checkout only works on `www.maelinne.ie`.
+Apply migration 0002 once to the production D1 database and retain the existing admin Access protection. Configure a production Stripe webhook endpoint for `https://www.maelinne.ie/api/stripe-webhook`. Add encrypted **live** keys only to production, `CHECKOUT_MODE=live`, and `CHECKOUT_LIVE_APPROVED=true` only after the owner explicitly approves opening payments. Live checkout works on `www.maelinne.ie` and `maelinne.ie`; other hosts remain blocked in live mode.
 
 Confirm customer receipt emails, the delivery/returns information and the account's business settings are ready before enabling payments. Update the existing “checkout coming soon” announcements as part of that release. The Stripe account owner completes any terms acceptance and account verification.
 

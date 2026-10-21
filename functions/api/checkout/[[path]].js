@@ -1,7 +1,8 @@
 import {reply,database,configuration,configurationChecks,quote,sessionParameters,stripe,resume,reconcile,settle} from '../_commerce.js';
 export async function onRequest({request,env,params}){
  const action=(params.path||[]).join('/');
- if(!configuration(env)||(env.CHECKOUT_MODE==='live'&&new URL(request.url).hostname!=='www.maelinne.ie'))return action==='config'?reply({enabled:false,checks:{...configurationChecks(env),hostname_allowed:env.CHECKOUT_MODE!=='live'||new URL(request.url).hostname==='www.maelinne.ie'}}):reply({error:'Checkout is not open yet. Your bag is saved.'},503);
+ const hostnameAllowed=env.CHECKOUT_MODE!=='live'||['www.maelinne.ie','maelinne.ie'].includes(new URL(request.url).hostname);
+ if(!configuration(env)||!hostnameAllowed)return action==='config'?reply({enabled:false,checks:{...configurationChecks(env),hostname_allowed:hostnameAllowed}}):reply({error:'Checkout is not open yet. Your bag is saved.'},503);
  const db=database(env),origin=new URL(request.url).origin;
  try{
   await db.prepare('SELECT checkout_session_id FROM orders LIMIT 1').all();
