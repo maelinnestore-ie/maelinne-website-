@@ -37,7 +37,7 @@ const photos = product => product.images?.length ? product.images : product.imag
       document.querySelector('.editorial-feature').hidden = true;
       return;
     }
-    for (const product of products.slice(0, 4)) {
+    for (const product of products.slice(0, 3)) {
       const card = document.createElement('article');
       card.className = 'editorial-product-card';
       const link = document.createElement('a');

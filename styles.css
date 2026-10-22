@@ -99,7 +99,7 @@
 .detail-window{aspect-ratio:3/4;overflow:hidden;background:#d8cec5}
 .detail-window img{height:100%;width:100%;object-fit:cover}
 .detail-window .detail-crop{transform:scale(1.9);transform-origin:50% 43%}
-.editorial-product-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:32px 24px}
+.editorial-product-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:32px 24px}
 .editorial-card-photo{position:relative;overflow:hidden;background:#e5d5ce;aspect-ratio:3/4}
 .editorial-product-card img{height:100%;aspect-ratio:auto;object-position:50% 25%;transition:transform .35s}
 .editorial-product-card h3{font:normal 22px/1.2 'DM Serif Display',Georgia,serif;margin:16px 0 7px}
@@ -112,7 +112,7 @@
 .feature-polaroid img.detail-crop{aspect-ratio:4/3;object-position:50% 67%}
 .featured-material{border-top:1px solid #cab8aa;padding-top:16px;font-size:13px}
 [hidden]{display:none!important}
-@media(min-width:1200px){.editorial-product-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(min-width:1200px){.editorial-product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:900px){.editorial-hero{grid-template-columns:minmax(0,48fr) minmax(0,52fr)}.editorial-collage{display:none}.editorial-copy{padding:45px 25px}.editorial-image,.editorial-hero{min-height:540px}.editorial-copy h1{font-size:clamp(2.8rem,6vw,4.5rem)}}
 @media(max-width:650px){.editorial-hero{display:grid;grid-template-columns:1fr;background:#e9ded2;min-height:0}.editorial-image{height:470px;min-height:0}.editorial-image>img{object-position:50% 22%}.editorial-image:after{background:linear-gradient(0deg,#e9ded2,transparent 18%)}.editorial-copy{align-self:stretch;margin:0;padding:28px 24px 42px}.editorial-copy h1{font-size:clamp(2.8rem,11vw,4.3rem);margin-top:6px}.hero-scribble{bottom:95px;left:24px;font-size:1.45rem;max-width:180px}.hero-product-link{bottom:28px;left:20px;max-width:calc(100% - 40px)}.editorial-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 14px}.editorial-product-card h3{font-size:18px}.card-view{font-size:9px;padding:9px 5px;left:7px;right:7px;bottom:7px}.feature-words h2{font-size:3rem}.polaroid{transform:rotate(3deg)}}
 @media(prefers-reduced-motion:reduce){.editorial-product-card a:hover img{transform:none}}
