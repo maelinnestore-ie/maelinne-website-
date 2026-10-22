@@ -84,19 +84,19 @@ const photos = product => product.images?.length ? product.images : product.imag
   ];
   const image = document.getElementById('feature-detail-image');
   const caption = document.getElementById('detail-caption');
-  const position = document.getElementById('detail-position');
   const pause = document.getElementById('detail-pause');
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let index = 0, requested = 0, paused = motion.matches, visible = false;
-  let hovered = false, focused = false, timer;
+  let timer;
   const path = slide => '/assets/details/' + slide.src + '.webp';
   function schedule() {
     clearInterval(timer);
-    if (!paused && visible && !hovered && !focused && !document.hidden)
+    if (!paused && visible && !document.hidden)
       timer = setInterval(() => show(index + 1), 5000);
   }
   function updatePause() {
-    pause.textContent = paused ? 'Play' : 'Pause';
+    pause.firstElementChild.textContent = paused ? '▶' : 'Ⅱ';
+    pause.title = (paused ? 'Play' : 'Pause') + ' slideshow';
     pause.setAttribute('aria-label', (paused ? 'Play' : 'Pause') + ' detail slideshow');
   }
   async function show(next) {
@@ -112,17 +112,8 @@ const photos = product => product.images?.length ? product.images : product.imag
     image.width = slide.width;
     image.height = slide.height;
     caption.textContent = slide.caption;
-    position.textContent = (index + 1) + ' / ' + slides.length;
   }
-  document.getElementById('detail-prev').addEventListener('click', () => { show(index - 1); schedule(); });
-  document.getElementById('detail-next').addEventListener('click', () => { show(index + 1); schedule(); });
   pause.addEventListener('click', () => { paused = !paused; updatePause(); schedule(); });
-  gallery.addEventListener('mouseenter', () => { hovered = true; schedule(); });
-  gallery.addEventListener('mouseleave', () => { hovered = false; schedule(); });
-  gallery.addEventListener('focusin', () => { focused = true; schedule(); });
-  gallery.addEventListener('focusout', event => {
-    if (!gallery.contains(event.relatedTarget)) { focused = false; schedule(); }
-  });
   document.addEventListener('visibilitychange', schedule);
   motion.addEventListener('change', () => { paused = motion.matches; updatePause(); schedule(); });
   if ('IntersectionObserver' in window) {
