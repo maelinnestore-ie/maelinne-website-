@@ -80,7 +80,7 @@ const photos = product => product.images?.length ? product.images : product.imag
     {src:'striped-sleeve',alt:'Fine black-and-white striped long sleeve beneath a plain black short sleeve',caption:'Layers worth a closer look.',width:392,height:550},
     {src:'henley-neckline',alt:'Olive ribbed Henley neckline with white buttons and a lace-trimmed white layer',caption:'Ribbed texture. Lovely little buttons.',width:698,height:1064},
     {src:'lace-hem',alt:'Scalloped white lace peeking beneath the hem of an olive ribbed top',caption:'The prettiest finishing touch.',width:808,height:246},
-    {src:'black-henley-cuff',alt:'AI-generated close-up illustrating a black ribbed Henley with an extra-long fitted cuff',caption:'Extra-long 5″ cuffs.',width:1200,height:900}
+    {src:'black-henley-cuff-3inch',alt:'AI-generated close-up illustrating a black ribbed Henley with a fitted 3-inch cuff',caption:'3-inch cuffs.',width:1200,height:900}
   ];
   const image = document.getElementById('feature-detail-image');
   const caption = document.getElementById('detail-caption');
