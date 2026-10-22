@@ -1,3 +1,4 @@
+import {cancellationReady,cancellationSchema,sendCancellationEmails} from '../_cancellation.js';
 // Private admin API. Fails closed until D1 and Cloudflare Access are configured.
 // Authentication: verified Cloudflare Access RS256 JWT from Cf-Access-Jwt-Assertion.
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -44,6 +45,19 @@ async function handler({request,env}){
    const key=crypto.randomUUID()+'.'+ext;
    await env.IMAGES.put(key,data,{httpMetadata:{contentType:photo.type},customMetadata:{source:'maelinne-admin'}});
    return json({url:'/api/images/'+key},201);
+  }
+  if(request.method==='GET'&&section==='cancellations'){
+   await env.DB.prepare(cancellationSchema).run();
+   const notices=(await env.DB.prepare('SELECT * FROM cancellation_notices ORDER BY received_at DESC LIMIT 100').all()).results;
+   return json({notices,email_ready:cancellationReady(env)});
+  }
+  if(request.method==='POST'&&/^cancellations\/[a-f0-9-]{36}\/retry$/.test(section)){
+   if(request.headers.get('Origin')!==url.origin)return fail('Invalid request.',403);
+   if(!cancellationReady(env))return fail('Configure the cancellation email sender first.',503);
+   const notice=await env.DB.prepare('SELECT * FROM cancellation_notices WHERE id=?').bind(section.split('/')[1]).first();
+   if(!notice)return fail('Cancellation notice not found.',404);
+   await sendCancellationEmails(env,env.DB,notice);
+   return json({ok:!!(notice.customer_email_sent&&notice.merchant_email_sent),notice});
   }
   if(request.method==='GET'&&section==='products'){
    const products=(await env.DB.prepare('SELECT * FROM products ORDER BY created_at DESC').all()).results;
@@ -211,3 +225,4 @@ async function handler({request,env}){
  }catch(e){if(String(e).includes('STOCK_RESERVED'))return fail('Some stock is reserved in an active checkout. Wait for it to finish or expire before reducing this quantity.',409);console.error('Admin API failure',e);return fail('Unable to complete request. Check database setup or duplicate SKU.',500);}
 }
 export const onRequest=handler;
+

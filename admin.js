@@ -260,3 +260,24 @@ window.addEventListener('beforeunload',event => { if (hasUnsavedChanges() || bus
       details.ontoggle=async()=>{if(!details.open||loaded)return;loaded=true;try{const result=await api('orders/'+order.id);for(const item of result.items)details.append(node('p',item.quantity+' × '+item.name+' · '+item.label+' · SKU '+item.sku));let address={};try{address=JSON.parse(result.order.shipping_address||'{}');}catch{}details.append(node('p',[result.order.customer_name,address.line1,address.line2,address.city,address.state,address.postal_code,address.country].filter(Boolean).join(', ')));}catch{loaded=false;details.append(node('p','Could not load order details. Close and reopen to retry.'));}};
       ordersEl.append(el); } } catch { ordersEl.textContent = 'Orders are temporarily unavailable.'; }
 })();
+
+
+// Cancellation notices are separate from payment/refund and dispatch state.
+(async()=>{
+ const section=node('section'),title=node('h2','Cancellation notices'),list=node('div'),refresh=button('Refresh cancellation notices',loadNotices);
+ section.append(title,node('p','Check notices promptly, stop dispatch where appropriate, and handle returns/refunds. A notice does not automatically refund or restock an order.'),refresh,list);
+ ordersEl.parentElement.append(section);
+ async function loadNotices(){
+  refresh.disabled=true;list.textContent='Loading…';
+  try{const result=await api('cancellations');list.replaceChildren();
+   if(!result.email_ready)list.append(node('p','Cancellation email sender is not configured. The public form remains unavailable; email and postal cancellation remain available.'));
+   if(!result.notices.length)list.append(node('p','No online cancellation notices yet.'));
+   for(const notice of result.notices){const box=node('article');box.className='order';
+    box.append(node('strong','Order '+notice.order_reference),node('p',notice.name+' · '+notice.email),node('p','Received '+notice.received_at+' · cancellation '+notice.id),node('p','Items: '+notice.items),node('p','Customer acknowledgement: '+(notice.customer_email_sent?'sent':'NEEDS ATTENTION')+' · Store notification: '+(notice.merchant_email_sent?'sent':'NEEDS ATTENTION')));
+    if(!notice.customer_email_sent||!notice.merchant_email_sent)box.append(button('Retry acknowledgement emails',async()=>{try{const r=await api('cancellations/'+notice.id+'/retry',{method:'POST'});await loadNotices();if(!r.ok)notify('Email delivery still needs attention. Send the acknowledgement manually without delay.');}catch(e){notify(e.message);}}));
+    list.append(box);
+   }
+  }catch{list.textContent='Cancellation notices could not be loaded. Refresh to retry.';}finally{refresh.disabled=false;}
+ }
+ await loadNotices();
+})();
