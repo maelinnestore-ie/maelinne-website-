@@ -11,3 +11,9 @@ input[inputmode="decimal"]{max-width:200px}
 .price-tools{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.price-tools button{min-width:140px}
 
 .copy-notice{padding:16px;border-left:4px solid #481b20;background:#eee3d8;line-height:1.6;font-size:.9rem;border-radius:4px}
+
+/* Keep one complete save action visible throughout the product editor. */
+.editor-savebar{position:sticky;top:0;z-index:3;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:14px;background:#fffaf5;border:1px solid #d8c6b8;border-radius:5px;box-shadow:0 3px 10px #3a272d10}
+.editor-savebar>p{flex:1;min-width:190px;font-size:.85rem;line-height:1.5;margin:0}
+.editor-savebar .form-message{flex-basis:100%}
+@media(max-width:650px){.editor-savebar{padding:12px}.editor-savebar>button{width:100%}.editor-savebar>p{min-width:0}}

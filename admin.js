@@ -38,6 +38,7 @@ function feedback(parent) { const el = node('p'); el.className = 'form-message';
 async function save(form, message, action, success) {
   if (busy) return;
   busy = true;
+  const savingProductId = form.matches('.product-editor') ? form.closest('.product').dataset.productId : null;
   const controls = [...form.querySelectorAll('button,input,select,textarea')];
   const wasDisabled = controls.map(el => el.disabled);
   controls.forEach(el => el.disabled = true);
@@ -45,7 +46,14 @@ async function save(form, message, action, success) {
   try {
     await action();
     message.textContent = success; notify(success); form.dataset.dirty = 'false';
-    try { await loadProducts(); } catch { notify(success + ' Refresh the product list when your connection returns.'); }
+    try {
+      await loadProducts();
+      if (savingProductId) {
+        const current = [...document.querySelectorAll('.product')].find(el => el.dataset.productId === savingProductId);
+        const savedMessage = current?.querySelector('.editor-savebar .form-message');
+        if (savedMessage) savedMessage.textContent = success;
+      }
+    } catch { notify(success + ' Refresh the product list when your connection returns.'); }
   } catch (error) {
     message.textContent = error.message; message.classList.add('error'); notify('Could not save: ' + error.message); message.focus();
   } finally { controls.forEach((el,i) => el.disabled = wasDisabled[i]); busy = false; }
@@ -189,6 +197,8 @@ createForm.onsubmit = event => {
 };
 async function loadProducts() { const result = await api('products'); allProducts = result.products; renderProducts(); }
 function renderProducts() {
+  const openIds = new Set([...document.querySelectorAll('.product')].filter(el => el.querySelector('details[open]')).map(el => el.dataset.productId));
+  const editingIds = new Set([...document.querySelectorAll('.product')].filter(el => el.querySelector('.product-editor:not([hidden])')).map(el => el.dataset.productId));
   const preserved = new Map([...document.querySelectorAll('.product')].filter(el => el.querySelector('form[data-dirty="true"]')).map(el => [el.dataset.productId,el]));
   draftsEl.replaceChildren(); publishedEl.replaceChildren();
   const q = search.value.trim().toLowerCase(), cat = categoryFilter.value, state = statusFilter.value;
@@ -204,62 +214,34 @@ function renderProducts() {
     actions.append(button('Duplicate item',() => duplicateItem(product)));
     actions.append(button(product.active?'Unpublish':'Publish',() => save(actions,actionMessage,() => api('products/'+product.id,{method:'PATCH',body:JSON.stringify({active:!product.active})}),'Product updated.')));
     if (!product.active) actions.append(button('Delete draft',() => { if (window.confirm('Permanently delete the draft "'+product.name+'" and its sizes? This cannot be undone.')) save(actions,actionMessage,() => api('products/'+product.id,{method:'DELETE'}),'Draft deleted.'); }));
-    const form = node('form'); form.className = 'product-editor'; form.hidden = true;
-    const edit = button('Edit product, sizes & stock',() => { form.hidden = !form.hidden; edit.textContent = form.hidden ? 'Edit product, sizes & stock' : 'Close editor'; }); actions.append(edit);
+    const form = node('form'); form.className = 'product-editor'; form.hidden = !editingIds.has(product.id);
+    const savebar = node('div'); savebar.className = 'editor-savebar';
+    const saveTop = node('button','Save all changes'); saveTop.type = 'submit';
+    const saveHint = node('p','Saves the name, category, material, description, style group, price, colour, photos, sizes and stock.');
+    savebar.append(saveTop,saveHint); form.append(savebar);
+    const message = feedback(savebar);
+    const edit = button('Edit product, sizes & stock',() => { form.hidden = !form.hidden; edit.textContent = form.hidden ? 'Edit product, sizes & stock' : 'Close editor'; }); edit.textContent = form.hidden ? 'Edit product, sizes & stock' : 'Close editor'; actions.append(edit);
     const name = field(form,'Name'); name.required = true; name.maxLength = 120; name.value = product.name;
     const category = field(form,'Category',node('select')); for (const title of categories) { const option = node('option',title); category.append(option); } category.value = categories.includes(product.category) ? product.category : 'Other';
     const material = field(form,'Material'); material.maxLength = 160; material.value = product.fabric || '';
     const description = field(form,'Description',node('textarea')); description.maxLength = 2000; description.value = product.description || '';
     const style = field(form,'Style group (links other colours)'); style.maxLength = 80; style.value = product.style_group || '';
     const price = field(form,'Price (€)'); price.type = 'text'; price.inputMode = 'decimal'; price.autocomplete = 'off'; price.pattern = '[0-9]+([.,][0-9]{1,2})?'; price.title = 'Use 16.99 or 16,99'; price.maxLength = 12; price.required = true; price.value = (product.price_cents/100).toFixed(2);
-    const priceTools = node('div'); priceTools.className = 'price-tools'; form.append(priceTools);
-    const priceMessage = feedback(priceTools);
-    priceTools.prepend(button('Save price',async () => {
-      if (busy) return;
-      let cents;
-      try { cents = priceInCents(price.value); }
-      catch (error) { priceMessage.textContent = error.message; priceMessage.classList.add('error'); priceMessage.focus(); return; }
-      price.disabled = true;
-      await save(priceTools,priceMessage,async () => {
-        await api('products/'+product.id,{method:'PATCH',body:JSON.stringify({price_cents:cents})});
-        const latest = (await api('products')).products.find(item => item.id === product.id);
-        if (!latest || latest.price_cents !== cents) throw Error('The saved price could not be confirmed. Please retry.');
-        price.value = (cents/100).toFixed(2); price.dataset.dirty = 'false';
-        form.dataset.dirty = String(!!form.querySelector('[data-dirty="true"]'));
-        summary.querySelector('h3').textContent = latest.name + (latest.color ? ' — '+latest.color : '') + ' · ' + euros(cents);
-      },'Price saved: '+euros(cents));
-      price.disabled = false;
-    },false));
-
     const editor = colourEditor(form,product);
-    const stockTools = node('div'); stockTools.className = 'stock-tools'; form.append(stockTools);
-    const stockMessage = feedback(stockTools);
-    stockTools.prepend(button('Save stock',async () => {
-      if (busy) return;
-      let rows;
-      try {
-        rows = editor.getSizes();
-        if (rows.some(row => !row.id) || rows.length !== product.variants.length) throw Error('Use Save product, sizes & stock to save new sizes first.');
-      } catch (error) { stockMessage.textContent = error.message; stockMessage.classList.add('error'); return; }
-      const quantities = [...editor.group.querySelectorAll('[aria-label="In stock"]')];
-      quantities.forEach(input => input.disabled = true);
-      await save(stockTools,stockMessage,async () => {
-        const result = await api('products/'+product.id+'/stock',{method:'PUT',body:JSON.stringify({variants:rows.map(({id,quantity}) => ({id,quantity}))})});
-        confirmStock(rows,result.variants);
-        for (const input of editor.group.querySelectorAll('[aria-label="In stock"]')) delete input.dataset.dirty;
-        form.dataset.dirty = String(!!form.querySelector('[data-dirty="true"]'));
-        stock.textContent = rows.map(row => row.label+': '+row.quantity).join(' · ');
-        summary.querySelector('span').textContent = (product.active?'Published':'Draft')+' · '+rows.reduce((sum,row) => sum+row.quantity,0)+' in stock';
-      },'Stock saved: '+rows.map(row => row.label+': '+row.quantity).join(' · '));
-      quantities.forEach(input => input.disabled = false);
-    },false));
-    stockTools.append(node('p','Save quantities on their own. Use the button below when changing size names, photos or other product details.'));
-    const submit = node('button','Save product, sizes & stock'); submit.type = 'submit'; form.append(submit); const message = feedback(form);
+    const submit = node('button','Save all changes'); submit.type = 'submit'; form.append(submit);
     form.onsubmit = event => { event.preventDefault(); save(form,message,async () => {
       const colour = await editor.read();
-      const result = await api('products/'+product.id+'/listing',{method:'PUT',body:JSON.stringify({...colour,name:name.value,description:description.value,price_cents:priceInCents(price.value),category:category.value,fabric:material.value,style_group:style.value})});
+      const expected = {...colour,name:name.value.trim(),description:description.value.trim(),price_cents:priceInCents(price.value),category:category.value,fabric:material.value.trim(),style_group:style.value.trim() || name.value.trim().slice(0,80)};
+      const result = await api('products/'+product.id+'/listing',{method:'PUT',body:JSON.stringify(expected)});
       confirmStock(colour.variants,result.variants);
-    },'Product, sizes and stock saved.'); };
+      const latest = (await api('products')).products.find(item => item.id === product.id);
+      const fields = ['name','description','price_cents','category','fabric','style_group','color'];
+      if (!latest || fields.some(key => (latest[key] ?? '') !== (expected[key] ?? '')) ||
+          JSON.stringify(latest.images) !== JSON.stringify([...new Set(expected.images)]) ||
+          expected.variants.some(row => !latest.variants.some(saved => (row.id ? saved.id === row.id : saved.label === row.label) && saved.label === row.label && saved.quantity === row.quantity && (!row.sku || saved.sku === row.sku))))
+        throw Error('The saved product details could not all be confirmed. Your entries are still here; please retry.');
+    },'All changes saved.'); };
+    details.open = openIds.has(product.id);
     details.append(form);
     const stock = node('p',product.variants.length ? product.variants.map(v => v.label+': '+v.quantity).join(' · ') : 'No sizes yet — open the editor to add them.'); details.append(stock);
     if (product.active) { const link = node('a','View product ↗'); link.href = '/product.html?id='+encodeURIComponent(product.id); link.target = '_blank'; link.rel = 'noopener'; details.append(link); }
