@@ -34,11 +34,7 @@ const photos = product => product.images?.length ? product.images : product.imag
     if (!products.length) {
       grid.textContent = 'Our first pieces are being prepared. Come back soon.';
       // Don't promote an old product when nothing is published.
-      document.querySelector('.editorial-collage').hidden = true;
       document.querySelector('.editorial-feature').hidden = true;
-      document.getElementById('hero-product-image').src = '/assets/hero.webp';
-      document.getElementById('hero-product-image').alt = 'MaeLinne editorial mood photograph';
-      document.querySelector('.hero-scribble').textContent = 'good clothes, better days';
       return;
     }
     for (const product of products.slice(0, 4)) {
@@ -76,16 +72,8 @@ const photos = product => product.images?.length ? product.images : product.imag
       || products.find(p => photos(p).length);
     if (featured) {
       const gallery = photos(featured);
-      const hero = document.getElementById('hero-product-image');
-      hero.src = gallery[1] || gallery[0];
-      hero.alt = featured.name + (featured.color ? ' in ' + featured.color : '');
-      const heroLink = document.getElementById('hero-product-link');
-      heroLink.href = productUrl(featured);
-      heroLink.textContent = featured.name + ' ↗';
-      heroLink.hidden = false;
       const isHenley = /hammond|henley/i.test(featured.name);
-      document.querySelector('.hero-scribble').textContent = isHenley ? 'a little lace. a little throwback.' : 'your next favourite';
-      for (const [id, source] of [['editorial-detail-image', gallery[1] || gallery[0]], ['feature-detail-image', gallery[0]]]) {
+      for (const [id, source] of [['feature-detail-image', gallery[0]]]) {
         const image = document.getElementById(id);
         image.src = source;
         image.alt = (isHenley ? 'A closer look at the lace and ribbed texture of ' : 'A closer look at ') + featured.name;
@@ -98,9 +86,6 @@ const photos = product => product.images?.length ? product.images : product.imag
       material.hidden = !featured.fabric;
       material.textContent = featured.fabric ? 'Material: ' + featured.fabric : '';
     } else {
-      document.getElementById('hero-product-image').src = '/assets/hero.webp';
-      document.getElementById('hero-product-image').alt = 'MaeLinne editorial mood photograph';
-      document.querySelector('.editorial-collage').hidden = true;
       document.querySelector('.editorial-feature').hidden = true;
     }
   } catch {

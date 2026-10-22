@@ -116,3 +116,20 @@
 @media(max-width:900px){.editorial-hero{grid-template-columns:minmax(0,48fr) minmax(0,52fr)}.editorial-collage{display:none}.editorial-copy{padding:45px 25px}.editorial-image,.editorial-hero{min-height:540px}.editorial-copy h1{font-size:clamp(2.8rem,6vw,4.5rem)}}
 @media(max-width:650px){.editorial-hero{display:grid;grid-template-columns:1fr;background:#e9ded2;min-height:0}.editorial-image{height:470px;min-height:0}.editorial-image>img{object-position:50% 22%}.editorial-image:after{background:linear-gradient(0deg,#e9ded2,transparent 18%)}.editorial-copy{align-self:stretch;margin:0;padding:28px 24px 42px}.editorial-copy h1{font-size:clamp(2.8rem,11vw,4.3rem);margin-top:6px}.hero-scribble{bottom:95px;left:24px;font-size:1.45rem;max-width:180px}.hero-product-link{bottom:28px;left:20px;max-width:calc(100% - 40px)}.editorial-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 14px}.editorial-product-card h3{font-size:18px}.card-view{font-size:9px;padding:9px 5px;left:7px;right:7px;bottom:7px}.feature-words h2{font-size:3rem}.polaroid{transform:rotate(3deg)}}
 @media(prefers-reduced-motion:reduce){.editorial-product-card a:hover img{transform:none}}
+
+/* Autumn campaign hero */
+.autumn-hero{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;min-height:clamp(530px,56.25vw,780px);background:#d3c0a2}
+.autumn-hero-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:70% center;z-index:-2}
+.autumn-hero::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(245,239,230,.94) 0%,rgba(245,239,230,.83) 23%,rgba(245,239,230,.3) 36%,transparent 48%);pointer-events:none}
+.autumn-hero-copy{width:37%;padding:45px 0 50px clamp(24px,5vw,100px);margin:0;align-self:center}
+.autumn-hero-copy h1{font-size:clamp(2.5rem,4.1vw,4.8rem);line-height:1.04}
+.autumn-hero-copy>p:not(.eyebrow){max-width:290px;color:var(--ink);font-size:15px;line-height:1.65}
+.autumn-hero-copy .eyebrow{font-size:9px;letter-spacing:.18em}
+@media(max-width:760px){
+  .autumn-hero{display:flex;flex-direction:column;align-items:stretch;min-height:0;background:var(--cream)}
+  .autumn-hero-image{position:relative;inset:auto;z-index:auto;display:block;width:100%;height:clamp(280px,65vw,460px);object-position:90% center}
+  .autumn-hero::before{display:none}
+  .autumn-hero-copy{width:100%;padding:28px 24px 36px;align-self:stretch}
+  .autumn-hero-copy h1{font-size:clamp(2.7rem,8vw,3.8rem);margin:8px 0 16px}
+  .autumn-hero-copy>p:not(.eyebrow){max-width:360px}
+}
