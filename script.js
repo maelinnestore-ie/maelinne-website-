@@ -33,8 +33,6 @@ const photos = product => product.images?.length ? product.images : product.imag
     grid.replaceChildren();
     if (!products.length) {
       grid.textContent = 'Our first pieces are being prepared. Come back soon.';
-      // Don't promote an old product when nothing is published.
-      document.querySelector('.editorial-feature').hidden = true;
       return;
     }
     for (const product of products.slice(0, 3)) {
@@ -67,28 +65,72 @@ const photos = product => product.images?.length ? product.images : product.imag
       card.append(link);
       grid.append(card);
     }
-    // Prefer the agreed Henley while published; otherwise feature a current piece.
-    const featured = products.find(p => /hammond|henley/i.test(p.name) && photos(p).length)
-      || products.find(p => photos(p).length);
-    if (featured) {
-      const gallery = photos(featured);
-      const isHenley = /hammond|henley/i.test(featured.name);
-      for (const [id, source] of [['feature-detail-image', gallery[0]]]) {
-        const image = document.getElementById(id);
-        image.src = source;
-        image.alt = (isHenley ? 'A closer look at the lace and ribbed texture of ' : 'A closer look at ') + featured.name;
-        image.classList.toggle('detail-crop', isHenley);
-      }
-      const featureLink = document.querySelector('.feature-words .editorial-cta');
-      featureLink.href = productUrl(featured);
-      featureLink.textContent = 'TAKE A CLOSER LOOK ↗';
-      const material = document.getElementById('featured-material');
-      material.hidden = !featured.fabric;
-      material.textContent = featured.fabric ? 'Material: ' + featured.fabric : '';
-    } else {
-      document.querySelector('.editorial-feature').hidden = true;
-    }
   } catch {
     grid.textContent = 'Our collection is temporarily unavailable. Please check back soon.';
   }
+})();
+
+
+// Detail photography rotates independently of the product catalogue.
+(() => {
+  const gallery = document.querySelector('.detail-gallery');
+  if (!gallery) return;
+  const slides = [
+    {src:'lace-cami',alt:'White lace edging, a small bow and fine stripes on the Bobbie cami',caption:'A little lace, a little bow.',width:750,height:678},
+    {src:'striped-sleeve',alt:'Fine black-and-white striped long sleeve beneath a plain black short sleeve',caption:'Layers worth a closer look.',width:392,height:550},
+    {src:'henley-neckline',alt:'Olive ribbed Henley neckline with white buttons and a lace-trimmed white layer',caption:'Ribbed texture. Lovely little buttons.',width:698,height:1064},
+    {src:'lace-hem',alt:'Scalloped white lace peeking beneath the hem of an olive ribbed top',caption:'The prettiest finishing touch.',width:808,height:246},
+    {src:'black-henley-cuff',alt:'AI-generated close-up illustrating a black ribbed Henley with an extra-long fitted cuff',caption:'Extra-long 5″ cuffs.',width:1200,height:900}
+  ];
+  const image = document.getElementById('feature-detail-image');
+  const caption = document.getElementById('detail-caption');
+  const position = document.getElementById('detail-position');
+  const pause = document.getElementById('detail-pause');
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let index = 0, requested = 0, paused = motion.matches, visible = false;
+  let hovered = false, focused = false, timer;
+  const path = slide => '/assets/details/' + slide.src + '.webp';
+  function schedule() {
+    clearInterval(timer);
+    if (!paused && visible && !hovered && !focused && !document.hidden)
+      timer = setInterval(() => show(index + 1), 5000);
+  }
+  function updatePause() {
+    pause.textContent = paused ? 'Play' : 'Pause';
+    pause.setAttribute('aria-label', (paused ? 'Play' : 'Pause') + ' detail slideshow');
+  }
+  async function show(next) {
+    const selected = (next + slides.length) % slides.length;
+    const slide = slides[selected], ticket = ++requested;
+    const ready = new Image();
+    ready.src = path(slide);
+    try { await ready.decode(); } catch { return; }
+    if (ticket !== requested) return;
+    index = selected;
+    image.src = ready.src;
+    image.alt = slide.alt;
+    image.width = slide.width;
+    image.height = slide.height;
+    caption.textContent = slide.caption;
+    position.textContent = (index + 1) + ' / ' + slides.length;
+  }
+  document.getElementById('detail-prev').addEventListener('click', () => { show(index - 1); schedule(); });
+  document.getElementById('detail-next').addEventListener('click', () => { show(index + 1); schedule(); });
+  pause.addEventListener('click', () => { paused = !paused; updatePause(); schedule(); });
+  gallery.addEventListener('mouseenter', () => { hovered = true; schedule(); });
+  gallery.addEventListener('mouseleave', () => { hovered = false; schedule(); });
+  gallery.addEventListener('focusin', () => { focused = true; schedule(); });
+  gallery.addEventListener('focusout', event => {
+    if (!gallery.contains(event.relatedTarget)) { focused = false; schedule(); }
+  });
+  document.addEventListener('visibilitychange', schedule);
+  motion.addEventListener('change', () => { paused = motion.matches; updatePause(); schedule(); });
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(entries => {
+      visible = entries[0].isIntersecting;
+      schedule();
+    }, {threshold:0.2}).observe(gallery);
+  } else { visible = true; }
+  updatePause();
+  schedule();
 })();
