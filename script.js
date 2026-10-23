@@ -65,6 +65,7 @@ const photos = product => product.images?.length ? product.images : product.imag
       card.append(link);
       grid.append(card);
     }
+    document.dispatchEvent(new Event('maelinne:products-rendered'));
   } catch {
     grid.textContent = 'Our collection is temporarily unavailable. Please check back soon.';
   }

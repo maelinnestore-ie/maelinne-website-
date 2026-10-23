@@ -3,9 +3,72 @@
  const element=(tag,text)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el;};
  function read(){try{const data=JSON.parse(localStorage.getItem(storageKey)||'[]');return Array.isArray(data)?data.filter(r=>r&&typeof r.variant_id==='string'&&Number.isInteger(r.quantity)&&r.quantity>0&&r.quantity<=10).slice(0,20):[];}catch{return [];}}
  function write(items){try{localStorage.setItem(storageKey,JSON.stringify(items));}catch{throw Error('Your browser could not save the bag. Allow site storage and try again.');}updateCounts();}
- function updateCounts(){const count=read().reduce((n,row)=>n+row.quantity,0);document.querySelectorAll('[data-bag-count]').forEach(el=>el.textContent=count?' ('+count+')':'');}
- document.querySelectorAll('.desktop-nav,.mobile-nav').forEach(nav=>{if(nav.querySelector('.bag-link'))return;const link=element('a');link.href='/bag.html';link.className='bag-link';link.append(element('span','Bag'));const count=element('span');count.dataset.bagCount='';link.append(count);nav.append(link);});
- updateCounts();window.addEventListener('storage',updateCounts);
+
+ const favouritesKey='maelinne-favourites-v1';
+ function savedIds(){try{const ids=JSON.parse(localStorage.getItem(favouritesKey)||'[]');return Array.isArray(ids)?[...new Set(ids.filter(id=>typeof id==='string'&&/^[a-f0-9-]{36}$/.test(id)))].slice(0,200):[];}catch{return [];}}
+ function icon(kind){
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d',kind==='bag'?'M6 7h12l1 14H5L6 7ZM9 8V6a3 3 0 0 1 6 0v2':'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z');
+  svg.append(path);return svg;
+ }
+ function headerLink(kind,href,title){
+  const link=element('a');link.href=href;link.className='header-icon '+kind+'-link';link.title=title;link.setAttribute('aria-label',title);link.append(icon(kind));
+  const count=element('span');count.className='header-count';count.hidden=true;
+  if(kind==='bag')count.dataset.bagCount='';else count.dataset.favouritesCount='';
+  count.setAttribute('aria-hidden','true');link.append(count);return link;
+ }
+ document.querySelectorAll('.site-header').forEach(header=>{
+  header.querySelectorAll('.bag-link').forEach(link=>link.remove());
+  let actions=header.querySelector('.header-actions');
+  if(!actions){actions=element('div');actions.className='header-actions';header.append(actions);}
+  const icons=element('div');icons.className='shopping-icons';icons.append(headerLink('bag','/bag.html','Shopping bag'),headerLink('favourites','/shop.html?favourites=1','Favourites'));actions.prepend(icons);
+ });
+ function updateCounts(){
+  const count=read().reduce((n,row)=>n+row.quantity,0),favourites=savedIds().length;
+  document.querySelectorAll('[data-bag-count]').forEach(el=>{el.textContent=String(count);el.hidden=!count;el.closest('a')?.setAttribute('aria-label','Shopping bag, '+count+' '+(count===1?'item':'items'));});
+  document.querySelectorAll('[data-favourites-count]').forEach(el=>{el.textContent=String(favourites);el.hidden=!favourites;el.closest('a')?.setAttribute('aria-label','Favourites, '+favourites+' saved '+(favourites===1?'item':'items'));});
+ }
+ let favouritesMessage;
+ function refreshHearts(){
+  const ids=new Set(savedIds());
+  document.querySelectorAll('[data-favourite-product]').forEach(button=>{
+   const selected=ids.has(button.dataset.favouriteProduct);
+   button.setAttribute('aria-pressed',String(selected));
+   button.setAttribute('aria-label',(selected?'Remove ':'Save ')+button.dataset.productName+(selected?' from favourites':' to favourites'));
+   button.title=selected?'Remove from favourites':'Save to favourites';
+  });
+  updateCounts();
+ }
+ function favouriteButton(id,name,inline=false){
+  const button=element('button');button.type='button';button.className='favourite-toggle'+(inline?' product-favourite':'');button.dataset.favouriteProduct=id;button.dataset.productName=name;button.append(icon('heart'));
+  if(inline)button.append(element('span','Save to favourites'));
+  button.addEventListener('click',()=>{
+   const ids=savedIds(),selected=ids.includes(id),next=selected?ids.filter(value=>value!==id):[...ids,id];
+   try{if(next.length>200)throw Error('Limit reached');localStorage.setItem(favouritesKey,JSON.stringify(next));}
+   catch{announce('Could not save this favourite. Check that browser storage is allowed.');return;}
+   refreshHearts();announce(selected?'Removed from favourites.':'Saved to favourites.');document.dispatchEvent(new Event('maelinne:favourites-changed'));
+  });
+  return button;
+ }
+ function announce(text){
+  if(!favouritesMessage){favouritesMessage=element('p');favouritesMessage.className='favourites-message';favouritesMessage.setAttribute('role','status');document.body.append(favouritesMessage);}
+  favouritesMessage.textContent=text;clearTimeout(announce.timer);announce.timer=setTimeout(()=>{favouritesMessage.textContent='';},3000);
+ }
+ function decorateFavourites(){
+  document.querySelectorAll('.editorial-product-card,.real-card').forEach(card=>{
+   if(card.querySelector('.favourite-toggle'))return;
+   const link=card.querySelector('a[href*="/product.html?id="]'),name=card.querySelector('h2,h3')?.textContent;
+   if(!link||!name)return;const id=new URL(link.href).searchParams.get('id');if(!/^[a-f0-9-]{36}$/.test(id||''))return;
+   card.append(favouriteButton(id,name));
+  });
+  const holder=document.getElementById('purchase-controls'),name=document.getElementById('name')?.textContent,id=new URLSearchParams(location.search).get('id');
+  if(holder&&name&&/^[a-f0-9-]{36}$/.test(id||'')&&!document.querySelector('.product-favourite'))holder.before(favouriteButton(id,name,true));
+  refreshHearts();
+ }
+ document.addEventListener('maelinne:products-rendered',decorateFavourites);
+ window.addEventListener('storage',event=>{if(event.key===favouritesKey||event.key===null){refreshHearts();document.dispatchEvent(new Event('maelinne:favourites-changed'));}else updateCounts();});
+ decorateFavourites();
  async function api(path,body){const response=await fetch('/api/checkout/'+path,{cache:'no-store',...(body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{})});const result=await response.json();if(!response.ok){const error=Error(result.error||'Could not connect. Please retry.');error.restartCheckout=result.restart_checkout===true;throw error;}return result;}
  async function purchase(){
   const holder=document.getElementById('purchase-controls');if(!holder)return;
