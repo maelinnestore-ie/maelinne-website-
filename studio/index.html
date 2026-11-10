@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>MaeLinne Content Studio</title>
+<style>
+:root{--cream:#f7f2eb;--paper:#fffdf9;--ink:#392f30;--muted:#756b6a;--wine:#743e50;--line:#e6dcd6;--rose:#ede0de;--sage:#e7ebe6}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);font:15px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+button,input,select,textarea{font:inherit}button{cursor:pointer}.shell{max-width:1170px;margin:auto;padding:28px 24px 80px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:24px}
+.eyebrow{color:var(--wine);text-transform:uppercase;letter-spacing:.17em;font-size:11px;font-weight:700}
+h1,h2,h3{font-family:Georgia,serif;font-weight:normal;line-height:1.15}h1{font-size:clamp(32px,4vw,51px);margin:7px 0}h2{font-size:31px;margin:0 0 8px}h3{font-size:22px;margin:0 0 8px}p{margin:5px 0 12px}.sub,.muted{color:var(--muted)}
+.btn{background:var(--wine);color:white;border:1px solid var(--wine);border-radius:9px;padding:10px 16px;font-weight:650}
+.btn.secondary{background:transparent;color:var(--wine)}.btn.ghost{background:#fff;color:var(--ink);border-color:var(--line)}
+.btn.small{font-size:13px;padding:6px 10px}.actions{display:flex;gap:9px;flex-wrap:wrap}
+.notice{background:#fff8e9;border-left:3px solid #b7843c;color:#674d31;padding:13px 16px;border-radius:8px;margin:21px 0;font-size:13px}
+nav{display:flex;gap:7px;flex-wrap:wrap;margin:25px 0}nav button{background:transparent;border:1px solid transparent;border-radius:8px;color:var(--muted);padding:10px 15px;font-weight:650}
+nav button.active{background:var(--paper);border-color:var(--line);color:var(--wine);box-shadow:0 2px 5px #61473408}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:15px;padding:22px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:20px}
+.stat{background:white;border:1px solid var(--line);border-radius:12px;padding:18px}
+.stat strong{display:block;color:var(--wine);font-size:32px;font-family:Georgia,serif;font-weight:400}
+.stat span{color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.post{background:#fff;border:1px solid var(--line);padding:17px;border-radius:12px;display:flex;flex-direction:column;gap:7px;min-height:220px}
+.post h3{font-size:21px;margin:2px 0}.tags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{font-size:11px;background:var(--rose);color:#654852;border-radius:30px;padding:4px 9px}.tag.sage{background:var(--sage);color:#3e5545}
+.post .foot{margin-top:auto;padding-top:9px;display:flex;align-items:center;justify-content:space-between}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.filters{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0 20px}.filters>*{min-width:135px}
+input,select,textarea{border:1px solid #d9ccca;background:white;color:var(--ink);border-radius:8px;padding:11px;width:100%;outline-color:var(--wine)}
+textarea{min-height:100px;resize:vertical}label{display:block;font-size:13px;font-weight:700;margin-bottom:5px;color:#58484d}
+.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.wide{grid-column:1/-1}
+.modalback{position:fixed;inset:0;background:#241a1cbf;display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
+.modalback.open{display:flex}.modal{background:var(--paper);border-radius:16px;width:min(760px,100%);max-height:92vh;overflow:auto;padding:27px}
+.modal .formgrid{margin:20px 0}.headrow{display:flex;align-items:start;justify-content:space-between;gap:10px}
+.calendarhead{display:flex;justify-content:space-between;align-items:center;margin:15px 0}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.dayname{text-align:center;color:var(--muted);font-size:12px;font-weight:700;padding:7px}
+.day{background:white;min-height:107px;border:1px solid var(--line);border-radius:7px;padding:7px;overflow:hidden}
+.day.off{opacity:.35}.daynum{font-size:12px;color:var(--muted);font-weight:700}.event{display:block;width:100%;text-align:left;border:0;background:var(--rose);border-radius:5px;font-size:11px;color:#613b46;margin:5px 0;padding:5px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty{padding:45px 20px;text-align:center;color:var(--muted);background:white;border:1px dashed var(--line);border-radius:12px}
+.help{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}.help article{background:white;border:1px solid var(--line);padding:18px;border-radius:12px}
+details{margin:15px 0}summary{cursor:pointer;color:var(--wine);font-weight:700}
+.footer{margin-top:30px;text-align:center;color:var(--muted);font-size:12px}
+@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,1fr)}.day{min-height:78px;padding:4px}.event{font-size:9px}}
+@media(max-width:580px){.shell{padding:18px 12px 60px}.grid,.formgrid,.help{grid-template-columns:1fr}.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:25px}.calendar{gap:2px}.day{min-height:62px}.dayname{font-size:10px}.event{font-size:8px;padding:3px 2px}.panel{padding:14px}}
+@media print{nav,.actions,.notice,.filters,.btn,.footer{display:none!important}.shell{padding:0}.grid{grid-template-columns:repeat(2,1fr)}.post{break-inside:avoid}body{background:white}}
+</style></head>
+<body><div class="shell">
+<header><div><div class="eyebrow">MaeLinne / business school</div><h1>Content Studio</h1><p class="sub">A little home for big ideas. Plan it, post it, learn from it.</p></div>
+<div class="actions"><button class="btn ghost" id="exportBtn">Download backup</button><button class="btn ghost" id="importBtn">Import backup</button><input type="file" id="importFile" accept="application/json,.json" hidden><button class="btn" id="addTop">+ New idea</button></div></header>
+<div class="notice"><b>Private planning note:</b> Your entries are stored only in this browser on this device. They are <b>not</b> uploaded to the website, synced to Julia's laptop or visible to website visitors. Download a backup regularly. Don't enter customer addresses or passwords.</div>
+<nav aria-label="Sections"><button data-tab="dashboard" class="active">Overview</button><button data-tab="ideas">Idea bank</button><button data-tab="calendar">Calendar</button><button data-tab="content">Content library</button><button data-tab="results">Results</button><button data-tab="guide">How to use</button></nav>
+<main id="view"></main><div class="footer">Made for MaeLinne • Keep it real, keep it comfy 🤎</div></div>
+<div class="modalback" id="back"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+<div class="headrow"><div><div class="eyebrow">Content editor</div><h2 id="modalTitle">New idea</h2></div><button class="btn ghost small" id="close">Close</button></div>
+<form id="postForm"><input type="hidden" name="id"><div class="formgrid">
+<div class="wide"><label for="title">Post title *</label><input id="title" name="title" required maxlength="120" placeholder="Style Battle 01: red or striped?"></div>
+<div><label for="platform">Platform</label><select id="platform" name="platform"><option>Instagram</option><option>TikTok</option><option>Pinterest</option><option>All three</option></select></div>
+<div><label for="pillar">Content pillar</label><select id="pillar" name="pillar"><option>Teen fashion inspiration</option><option>Cute but comfy</option><option>You Pick, We Find</option><option>Building MaeLinne</option><option>Irish teen life</option></select></div>
+<div><label for="status">Stage</label><select id="status" name="status"><option>Idea</option><option>Planning</option><option>Ready to post</option><option>Published</option></select></div>
+<div><label for="date">Planned / published date</label><input id="date" name="date" type="date"></div>
+<div class="wide"><label for="hook">Hook (the first sentence)</label><input id="hook" name="hook" placeholder="Only one makes the China wishlist 👀"></div>
+<div class="wide"><label for="caption">Caption / script</label><textarea id="caption" name="caption" placeholder="Write your caption here..."></textarea></div>
+<div class="wide"><label for="notes">Shot list / notes / artwork filenames</label><textarea id="notes" name="notes" placeholder="Film Julia holding her two sketches. Add a poll..."></textarea></div>
+<div class="wide"><label for="link">Published post link (optional)</label><input id="link" name="link" type="url" placeholder="https://..."></div>
+<div><label for="views">Views</label><input id="views" name="views" type="number" min="0" placeholder="0"></div>
+<div><label for="saves">Saves</label><input id="saves" name="saves" type="number" min="0" placeholder="0"></div>
+<div><label for="comments">Comments</label><input id="comments" name="comments" type="number" min="0" placeholder="0"></div>
+<div><label for="votes">Poll votes</label><input id="votes" name="votes" type="number" min="0" placeholder="0"></div>
+</div><div class="actions"><button class="btn" type="submit">Save content</button><button class="btn ghost" type="button" id="cancel">Cancel</button><button class="btn secondary" type="button" id="deletePost" hidden>Delete</button></div></form></div></div>
+<script>
+(()=>{'use strict';
+const KEY='maelinne_content_studio_v1';
+const seed=[
+{id:'sample1',title:'Style Battle 01: red or striped?',platform:'Instagram',pillar:'You Pick, We Find',status:'Idea',date:'',hook:'Only one makes our China wishlist. A or B?',caption:'A or B? Vote for the style you would actually wear 🤎',notes:'Use Julia’s original red henley and striped top sketches. Share a Story poll.',link:'',views:0,saves:0,comments:0,votes:0},
+{id:'sample2',title:'Cute but is it comfy?',platform:'TikTok',pillar:'Cute but comfy',status:'Idea',date:'',hook:'Cute top. Criminally scratchy label.',caption:'Would you wear it?',notes:'Film fabric, label and seam closeups. Only claim comfort after testing.',link:'',views:0,saves:0,comments:0,votes:0},
+{id:'sample3',title:'Three Y2K outfits for an Irish winter',platform:'Pinterest',pillar:'Irish teen life',status:'Idea',date:'',hook:'Cute outfits that can survive Irish weather.',caption:'Our Irish winter outfit inspiration.',notes:'Make 3 original outfit flat lays with clothes you own.',link:'',views:0,saves:0,comments:0,votes:0}
+];
+let posts;try{const stored=JSON.parse(localStorage.getItem(KEY));posts=Array.isArray(stored)?stored:seed}catch(e){posts=seed}
+let tab='dashboard',month=new Date(new Date().getFullYear(),new Date().getMonth(),1),filter='',stage='';
+const el=id=>document.getElementById(id);
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(posts))}catch(e){alert('Browser storage is full. Please download a backup.')}};
+const pad=n=>String(n).padStart(2,'0');
+const niceDate=s=>s?new Date(s+'T12:00:00').toLocaleDateString('en-IE',{day:'numeric',month:'short',year:'numeric'}):'Not scheduled';
+const pill=s=>'<span class="tag '+(s==='Published'?'sage':'')+'">'+esc(s)+'</span>';
+const card=p=>'<article class="post"><div class="tags">'+pill(p.platform)+pill(p.status)+'</div><h3>'+esc(p.title)+'</h3><div class="muted" style="font-size:12px">'+esc(p.pillar)+' · '+niceDate(p.date)+'</div><p>'+esc(p.hook||'No hook yet')+'</p><div class="foot"><span class="muted" style="font-size:12px">'+(Number(p.views)||0)+' views</span><button class="btn secondary small" data-edit="'+esc(p.id)+'">Open & edit</button></div></article>';
+function render(){
+document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+const v=el('view');
+if(tab==='dashboard'){
+const counts=['Idea','Planning','Ready to post','Published'].map(s=>posts.filter(p=>p.status===s).length);
+v.innerHTML='<div class="stats">'+['Ideas','In progress','Ready','Published'].map((s,i)=>'<div class="stat"><strong>'+counts[i]+'</strong><span>'+s+'</span></div>').join('')+'</div><div class="row"><div><h2>Coming up</h2><p class="muted">Your nearest planned posts and fresh ideas.</p></div><button class="btn" data-new>+ Add content</button></div><div class="grid">'+posts.slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')).slice(0,6).map(card).join('')+'</div><details><summary>Quick tips for Julia</summary><p>Hook = the first words that stop scrolling. Content pillar = the topic. CTA = what you want viewers to do next. A post can begin as an idea, become a plan, then be marked ready and finally published.</p></details>';
+}else if(tab==='ideas'||tab==='content'||tab==='results'){
+const relevant=posts.filter(p=>(tab!=='ideas'||p.status==='Idea')&&(tab!=='results'||p.status==='Published')).filter(p=>(!stage||p.status===stage)&&(!filter||[p.title,p.hook,p.caption,p.pillar,p.platform,p.notes].join(' ').toLowerCase().includes(filter)));
+v.innerHTML='<div class="row"><div><h2>'+(tab==='ideas'?'Idea bank':tab==='content'?'Content library':'What worked?')+'</h2><p class="muted">'+(tab==='ideas'?'Your unstarted content ideas.':tab==='content'?'Every piece of content, from idea to published.':'Record results after publishing so the next post is even better.')+'</p></div><button class="btn" data-new>+ New content</button></div><div class="filters"><input id="search" placeholder="Search content…" value="'+esc(filter)+'"><select id="stageFilter"><option value="">All stages</option>'+['Idea','Planning','Ready to post','Published'].map(s=>'<option '+(s===stage?'selected':'')+'>'+s+'</option>').join('')+'</select></div>'+(relevant.length?'<div class="grid">'+relevant.map(card).join('')+'</div>':'<div class="empty">Nothing here yet. Add your first idea!</div>');
+el('search').addEventListener('input',e=>{filter=e.target.value;render();el('search').focus();el('search').setSelectionRange(filter.length,filter.length)});
+el('stageFilter').addEventListener('change',e=>{stage=e.target.value;render()});
+}else if(tab==='calendar'){
+const y=month.getFullYear(),m=month.getMonth(),offset=(new Date(y,m,1).getDay()+6)%7,days=new Date(y,m+1,0).getDate();
+let cells=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>'<div class="dayname">'+d+'</div>').join('');
+for(let i=0;i<Math.ceil((offset+days)/7)*7;i++){const day=i-offset+1,valid=day>0&&day<=days,d=valid?y+'-'+pad(m+1)+'-'+pad(day):'',found=posts.filter(p=>p.date===d);cells+='<div class="day '+(valid?'':'off')+'"><div class="daynum">'+(valid?day:'')+'</div>'+found.map(p=>'<button class="event" data-edit="'+esc(p.id)+'">'+esc(p.title)+'</button>').join('')+'</div>'}
+v.innerHTML='<div class="row"><div><h2>Content calendar</h2><p class="muted">Add a date to any post and it appears here.</p></div><button class="btn" data-new>+ Schedule post</button></div><div class="calendarhead"><button class="btn ghost small" id="prevMonth">← Previous</button><h3>'+month.toLocaleDateString('en-IE',{month:'long',year:'numeric'})+'</h3><button class="btn ghost small" id="nextMonth">Next →</button></div><div class="calendar">'+cells+'</div>';
+el('prevMonth').onclick=()=>{month=new Date(y,m-1,1);render()};el('nextMonth').onclick=()=>{month=new Date(y,m+1,1);render()};
+}else{
+v.innerHTML='<div class="row"><h2>Getting started</h2><button class="btn" data-new>+ My first idea</button></div><div class="help"><article><h3>1. Save your ideas</h3><p>Add an idea, choose the platform and one of MaeLinne’s five content pillars. It does not need to be perfect.</p></article><article><h3>2. Plan your post</h3><p>Write the hook, caption or script. Use the notes field for shot lists and filenames for Julia’s sketches and images.</p></article><article><h3>3. Schedule it</h3><p>Add a date and change the stage to “Planning” or “Ready to post”. The post will appear in the calendar.</p></article><article><h3>4. Learn from it</h3><p>After posting, paste the link and record views, saves, comments and votes. Review which ideas got a response from Irish customers.</p></article><article><h3>5. Back it up</h3><p>Click “Download backup” after each planning session. The JSON backup contains your writing and metrics. Import it on another device to transfer the plan manually.</p></article><article><h3>6. Know the limits</h3><p>This simple version does not upload images, sync between devices, publish to social apps or store anything on Cloudflare. Keep image files in a separate private folder.</p></article></div>';
+}
+v.querySelectorAll('[data-new]').forEach(b=>b.onclick=()=>edit());
+v.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>edit(b.dataset.edit));
+}
+function edit(id){const p=posts.find(x=>x.id===id);el('postForm').reset();for(const k of ['id','title','platform','pillar','status','date','hook','caption','notes','link','views','saves','comments','votes']){if(p&&el('postForm').elements[k])el('postForm').elements[k].value=p[k]??''}
+el('modalTitle').textContent=p?'Edit content':'New content';el('deletePost').hidden=!p;el('back').classList.add('open');el('title').focus()}
+function close(){el('back').classList.remove('open')}
+el('postForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),data={};for(const [k,v] of f.entries())data[k]=v;data.id=data.id||('p'+Date.now()+Math.random().toString(36).slice(2,7));for(const k of ['views','saves','comments','votes'])data[k]=Math.max(0,Number(data[k])||0);const idx=posts.findIndex(p=>p.id===data.id);if(idx>=0)posts[idx]=data;else posts.unshift(data);save();close();render()};
+el('deletePost').onclick=()=>{const id=el('postForm').elements.id.value;if(confirm('Delete this content item?')){posts=posts.filter(p=>p.id!==id);save();close();render()}};
+el('close').onclick=close;el('cancel').onclick=close;el('back').onclick=e=>{if(e.target===el('back'))close()};document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+el('addTop').onclick=()=>edit();document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;filter='';stage='';render()});
+el('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({app:'MaeLinne Content Studio',version:1,exported:new Date().toISOString(),posts},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='maelinne-content-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)};
+el('importBtn').onclick=()=>el('importFile').click();
+el('importFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>2000000)throw Error('Backup file is too large');const obj=JSON.parse(await file.text());if(obj.app!=='MaeLinne Content Studio'||!Array.isArray(obj.posts))throw Error('Not a MaeLinne backup');const clean=obj.posts.filter(x=>x&&typeof x.title==='string'&&x.title.length<200).slice(0,1000).map(x=>({id:String(x.id||'p'+Math.random()),title:String(x.title).slice(0,120),platform:String(x.platform||'Instagram'),pillar:String(x.pillar||'Building MaeLinne'),status:['Idea','Planning','Ready to post','Published'].includes(x.status)?x.status:'Idea',date:/^\d{4}-\d{2}-\d{2}$/.test(x.date||'')?x.date:'',hook:String(x.hook||'').slice(0,400),caption:String(x.caption||'').slice(0,10000),notes:String(x.notes||'').slice(0,10000),link:String(x.link||'').slice(0,1000),views:Number(x.views)||0,saves:Number(x.saves)||0,comments:Number(x.comments)||0,votes:Number(x.votes)||0}));if(confirm('Replace the current local plan with '+clean.length+' items from this backup? Download your current backup first if needed.')){posts=clean;save();render();alert('Backup imported.')}}catch(err){alert('Could not import: '+err.message)}e.target.value=''};
+save();render();
+})();
+</script></body></html>
