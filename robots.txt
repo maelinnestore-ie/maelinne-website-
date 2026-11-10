@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /studio/
+Disallow: /bag.html
+Disallow: /success.html
+Disallow: /cancel.html
+
+Sitemap: https://www.maelinne.ie/sitemap.xml
