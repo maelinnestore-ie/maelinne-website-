@@ -4,7 +4,7 @@ export async function onRequestGet({env}) {
   const urls=['https://www.maelinne.ie/','https://www.maelinne.ie/shop.html'];
   if (env.DB) {
     try {
-      const rows=(await env.DB.prepare('SELECT id FROM products WHERE active=1 ORDER BY created_at DESC').all()).results || [];
+      const rows=(await env.DB.prepare('SELECT id FROM products WHERE active=1 AND UPPER(name) NOT LIKE 'TEST ONLY%' ORDER BY created_at DESC').all()).results || [];
       for (const p of rows) if(p.id != null) urls.push('https://www.maelinne.ie/product.html?id='+encodeURIComponent(p.id));
     } catch { return new Response('Sitemap temporarily unavailable',{status:503,headers:{'cache-control':'no-store'}}); }
   }
