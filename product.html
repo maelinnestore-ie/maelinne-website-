@@ -23,18 +23,19 @@
           "price":euro(p.price_cents),
           "availability":inStock?"https://schema.org/InStock":"https://schema.org/OutOfStock",
           "itemCondition":"https://schema.org/NewCondition",
-          "shippingDetails":[
-            {"@type":"OfferShippingDetails","shippingDestination":{"@type":"DefinedRegion","addressCountry":"IE"},"shippingRate":{"@type":"MonetaryAmount","value":"5.00","currency":"EUR"},"eligibleTransactionVolume":{"@type":"PriceSpecification","minPrice":"0","maxPrice":"39.99","priceCurrency":"EUR"}},
-            {"@type":"OfferShippingDetails","shippingDestination":{"@type":"DefinedRegion","addressCountry":"IE"},"shippingRate":{"@type":"MonetaryAmount","value":"0.00","currency":"EUR"},"eligibleTransactionVolume":{"@type":"PriceSpecification","minPrice":"40","priceCurrency":"EUR"}}
-          ],
+          "shippingDetails":{
+            "@type":"OfferShippingDetails",
+            "shippingDestination":{"@type":"DefinedRegion","addressCountry":"IE"},
+            "shippingRate":{"@type":"MonetaryAmount","value":"5.00","currency":"EUR"},
+            "deliveryTime":{"@type":"ShippingDeliveryTime","handlingTime":{"@type":"QuantitativeValue","minValue":0,"maxValue":2,"unitCode":"DAY"},"transitTime":{"@type":"QuantitativeValue","minValue":0,"maxValue":5,"unitCode":"DAY"}}
+          },
           "hasMerchantReturnPolicy":{
             "@type":"MerchantReturnPolicy",
             "applicableCountry":"IE",
             "returnPolicyCategory":"https://schema.org/MerchantReturnFiniteReturnWindow",
             "merchantReturnDays":14,
             "returnMethod":"https://schema.org/ReturnByMail",
-            "returnFees":"https://schema.org/ReturnFeesCustomerResponsibility",
-            "merchantReturnLink":location.origin+"/terms.html#returns"
+            "returnMethod":"https://schema.org/ReturnByMail"
           }
         }
       };
